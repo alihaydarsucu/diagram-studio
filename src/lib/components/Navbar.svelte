@@ -24,7 +24,7 @@
 <nav class="z-50 flex p-4 sm:p-6">
   <div class="flex flex-1 items-center gap-2">
     <MainMenu />
-    <img class="size-8 rounded-md" src={asset('/diagram-studio.png')} alt="Diagram Studio" />
+    <img class="size-8 rounded-md" src={asset('/diagram-studio-icon.png')} alt="Diagram Studio" />
     <a href={resolve('/', {})} class="whitespace-nowrap text-accent">
       Diagram Studio
     </a>

@@ -19,7 +19,7 @@
     <div class="flex flex-col gap-4">
       <div class="flex flex-col gap-2">
         <h2 class="flex items-center gap-2">
-          <img class="size-5" src={asset('/favicon.svg')} alt="Diagram Studio" />
+          <img class="size-5" src={asset('/diagram-studio-icon.png')} alt="Diagram Studio" />
           Diagram Studio
         </h2>
         <CopyInput value={window.location.href} />
