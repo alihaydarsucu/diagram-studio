@@ -37,6 +37,9 @@ export const historyState = {
   get entries(): HistoryEntry[] {
     return slotFor(mode.value)?.value ?? loader;
   },
+  get allEntries(): HistoryEntry[] {
+    return [...auto.value, ...manual.value].sort((a, b) => b.time - a.time);
+  },
   get loaderEntries(): HistoryEntry[] {
     return loader;
   },
@@ -93,12 +96,17 @@ export const setLoaderEntries = (entries: Optional<HistoryEntry, 'id'>[]): void 
 };
 
 export const removeEntry = (id: string): void => {
-  const slot = slotFor(mode.value);
-  if (!slot) {
-    return;
+  let removed = false;
+  for (const slot of [auto, manual]) {
+    const next = slot.value.filter((entry) => entry.id !== id);
+    if (next.length !== slot.value.length) {
+      slot.value = next;
+      removed = true;
+    }
   }
-  slot.value = slot.value.filter((entry) => entry.id !== id);
-  logEvent('history', { action: 'clear', type: 'single' });
+  if (removed) {
+    logEvent('history', { action: 'clear', type: 'single' });
+  }
 };
 
 export const renameEntry = (id: string, name: string): void => {

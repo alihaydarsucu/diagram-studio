@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { asset } from '$app/paths';
   import { historyState, removeEntry } from '$lib/components/History/historyState.svelte';
   import { serializeState } from '$lib/util/serde';
   import { urls } from '$lib/util/state.svelte';
@@ -15,6 +16,7 @@
   <nav class="border-b bg-card">
     <div class="container mx-auto flex h-16 items-center justify-between px-4">
       <div class="flex items-center gap-2">
+        <img class="size-9 rounded-md" src={asset('/diagram-studio.png')} alt="Diagram Studio" />
         <span class="text-xl font-bold tracking-tight text-primary">Diagram Studio</span>
       </div>
       <Button href={urls.current.new} variant="accent">New Project</Button>
@@ -28,7 +30,7 @@
     </div>
 
     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {#each historyState.entries as entry (entry.id)}
+      {#each historyState.allEntries as entry (entry.id)}
         <div class="group flex flex-col justify-between gap-4 rounded-xl border bg-card p-5 text-card-foreground shadow-sm transition-all hover:border-accent hover:shadow-md">
           <div class="flex flex-col gap-1">
             <a href={entryUrl(entry.state)} class="truncate text-lg font-semibold hover:text-accent" title={entry.name}>{entry.name || 'Untitled Project'}</a>

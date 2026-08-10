@@ -62,10 +62,7 @@
 
   const downloadVisual = (format: 'PNG' | 'SVG') => {
     isSaveMenuOpen = false;
-    const button = document.querySelector(`[data-testid="download-${format}"]`);
-    if (button instanceof HTMLButtonElement) {
-      button.click();
-    }
+    window.dispatchEvent(new CustomEvent('diagram-export', { detail: format }));
   };
 
   let isSaveMenuOpen = $state(false);

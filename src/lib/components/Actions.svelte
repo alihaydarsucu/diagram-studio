@@ -16,6 +16,7 @@
   import { version as FAVersion } from '@fortawesome/fontawesome-free/package.json';
   import dayjs from 'dayjs';
   import { toBase64 } from 'js-base64';
+  import { onMount } from 'svelte';
   import DownloadIcon from '~icons/material-symbols/download';
   import ExternalLinkIcon from '~icons/material-symbols/open-in-new-rounded';
   import WidthIcon from '~icons/material-symbols/width-rounded';
@@ -225,6 +226,20 @@ ${svgString}`);
       type: 'svg'
     });
   };
+
+  onMount(() => {
+    const handleExport = (event: Event) => {
+      const format = (event as CustomEvent<'PNG' | 'SVG'>).detail;
+      if (format === 'PNG') {
+        void onDownloadPNG(event);
+      } else if (format === 'SVG') {
+        onDownloadSVG();
+      }
+    };
+
+    window.addEventListener('diagram-export', handleExport);
+    return () => window.removeEventListener('diagram-export', handleExport);
+  });
 
   let gistURL = $state('');
   $effect(() => {

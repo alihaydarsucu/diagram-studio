@@ -8,7 +8,7 @@
 </script>
 
 <script lang="ts">
-  import { resolve } from '$app/paths';
+  import { asset, resolve } from '$app/paths';
   import MainMenu from '$/components/MainMenu.svelte';
   import { Separator } from '$/components/ui/separator';
   import type { Snippet } from 'svelte';
@@ -19,12 +19,12 @@
   }
 
   let { children, mobileToggle }: Props = $props();
-
 </script>
 
 <nav class="z-50 flex p-4 sm:p-6">
   <div class="flex flex-1 items-center gap-2">
     <MainMenu />
+    <img class="size-8 rounded-md" src={asset('/diagram-studio.png')} alt="Diagram Studio" />
     <a href={resolve('/', {})} class="whitespace-nowrap text-accent">
       Diagram Studio
     </a>

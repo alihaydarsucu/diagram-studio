@@ -3,9 +3,9 @@
 	"name": "Diagram Studio",
 	"icons": [
 		{
-			"src": "/diagram-studio.svg",
-			"type": "image/svg+xml",
-			"sizes": "any"
+			"src": "/diagram-studio.png",
+			"type": "image/png",
+			"sizes": "512x512"
 		}
 	],
 	"start_url": "/edit",
