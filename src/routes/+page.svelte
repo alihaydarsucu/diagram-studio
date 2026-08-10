@@ -133,7 +133,7 @@
         <p class="text-muted-foreground">Manage and organize your diagrams</p>
         <a
           class="text-sm text-accent hover:underline"
-          href="https://mermaid.js.org/intro/"
+          href="https://mermaid.js.org/intro/#diagram-types"
           target="_blank"
           rel="noopener noreferrer">Mermaid Guide ↗</a>
       </div>
