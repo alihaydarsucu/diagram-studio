@@ -1,6 +1,6 @@
 import { createHash, createHmac, timingSafeEqual, randomBytes } from 'node:crypto';
 import { createServer } from 'node:http';
-import { readFile, stat } from 'node:fs/promises';
+import { mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
 import { extname, join, normalize, relative, resolve } from 'node:path';
 
 const port = Number(process.env.PORT || 8080);
@@ -11,10 +11,41 @@ const sessionSecret = createHash('sha256')
   .update(`${authUser}\0${authPassword || ''}`)
   .digest();
 const sessionDuration = 7 * 24 * 60 * 60;
+const historyFile = join(process.env.DIAGRAM_STUDIO_DATA_DIR || '/data', 'history.json');
 
 if (!authPassword) {
   throw new Error('DIAGRAM_STUDIO_PASSWORD must be set before starting Diagram Studio');
 }
+
+await mkdir(resolve(historyFile, '..'), { recursive: true });
+
+const isHistoryEntry = (entry) =>
+  entry && typeof entry === 'object' && entry.state && typeof entry.time === 'number';
+
+const readHistory = async () => {
+  try {
+    const data = JSON.parse(await readFile(historyFile, 'utf8'));
+    return {
+      auto: Array.isArray(data.auto) ? data.auto.filter(isHistoryEntry).slice(0, 30) : [],
+      manual: Array.isArray(data.manual) ? data.manual.filter(isHistoryEntry).slice(0, 500) : []
+    };
+  } catch {
+    return { auto: [], manual: [] };
+  }
+};
+
+let historyData = await readHistory();
+let historyWrite = Promise.resolve();
+
+const saveHistory = (next) => {
+  historyData = next;
+  const temporaryFile = `${historyFile}.tmp`;
+  historyWrite = historyWrite.then(async () => {
+    await writeFile(temporaryFile, JSON.stringify(historyData), 'utf8');
+    await rename(temporaryFile, historyFile);
+  });
+  return historyWrite;
+};
 
 const publicPaths = (pathname) =>
   pathname === '/login' ||
@@ -53,6 +84,20 @@ const isAuthenticated = (request) => {
 const send = (response, status, body, headers = {}) => {
   response.writeHead(status, { 'Cache-Control': 'no-store', ...headers });
   response.end(body);
+};
+
+const sendJson = (response, status, body) =>
+  send(response, status, JSON.stringify(body), {
+    'Content-Type': 'application/json; charset=utf-8'
+  });
+
+const readRequestBody = async (request) => {
+  let body = '';
+  for await (const chunk of request) {
+    body += chunk;
+    if (body.length > 5_000_000) throw new Error('Request body too large');
+  }
+  return JSON.parse(body);
 };
 
 const serveFile = async (response, pathname) => {
@@ -96,11 +141,37 @@ createServer(async (request, response) => {
   const url = new URL(request.url || '/', `http://${request.headers.host || 'localhost'}`);
   const pathname = decodeURIComponent(url.pathname);
 
-  if (request.method === 'POST' && pathname === '/auth/login') {
-    let body = '';
-    for await (const chunk of request) body += chunk;
+  if (pathname === '/api/history' && request.method === 'GET') {
+    if (!isAuthenticated(request)) {
+      send(response, 401, 'Unauthorized');
+      return;
+    }
+    sendJson(response, 200, historyData);
+    return;
+  }
+
+  if (pathname === '/api/history' && request.method === 'PUT') {
+    if (!isAuthenticated(request)) {
+      send(response, 401, 'Unauthorized');
+      return;
+    }
     try {
-      const credentials = JSON.parse(body);
+      const data = await readRequestBody(request);
+      const next = {
+        auto: Array.isArray(data.auto) ? data.auto.filter(isHistoryEntry).slice(0, 30) : [],
+        manual: Array.isArray(data.manual) ? data.manual.filter(isHistoryEntry).slice(0, 500) : []
+      };
+      await saveHistory(next);
+      sendJson(response, 200, next);
+    } catch {
+      send(response, 400, 'Invalid history data');
+    }
+    return;
+  }
+
+  if (request.method === 'POST' && pathname === '/auth/login') {
+    try {
+      const credentials = await readRequestBody(request);
       const valid = credentials.username === authUser && credentials.password === authPassword;
       if (!valid) {
         send(response, 401, JSON.stringify({ error: 'Invalid credentials' }), {

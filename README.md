@@ -39,8 +39,8 @@ and create as many charts as your own infrastructure supports.
 
 You are free to download this repository, modify it, and deploy your own copy.
 Each deployment can use its own domain, renderer settings, logo, theme, and
-password. Diagram data is kept in the browser unless you configure an external
-service yourself.
+password. Authenticated project history and named diagrams are stored in the
+deployment’s persistent data volume, not only in an individual browser.
 
 ### Password protection
 
@@ -151,6 +151,6 @@ This app is created with Svelte Kit.
 ## Privacy and scope
 
 This fork removes Mermaid Pro/Chart promotional UI and external Mermaid
-branding from the editor. Diagram history and projects are stored locally in
-the browser by default. Renderer and Kroki requests only occur when you
-explicitly use those export links.
+branding from the editor. Project history is stored in the authenticated
+deployment volume. Renderer and Kroki requests only occur when you explicitly
+use those export links.

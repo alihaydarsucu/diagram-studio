@@ -1,5 +1,5 @@
 import type { HistoryEntry, HistoryType, Optional, State } from '$lib/types';
-import { persisted, readJSON, type Persisted } from '$lib/util/persist.svelte';
+import { readJSON, writeJSON } from '$lib/util/persist.svelte';
 import { inputState } from '$lib/util/state.svelte';
 import { logEvent } from '$lib/util/stats';
 import { generateSlug } from 'random-word-slugs';
@@ -8,17 +8,79 @@ import { v4 as uuidV4 } from 'uuid';
 const MAX_AUTO_HISTORY_LENGTH = 30;
 const AUTO_SAVE_INTERVAL = 60_000;
 
-const auto = persisted<HistoryEntry[]>('autoHistoryStore', []);
-const manual = persisted<HistoryEntry[]>('manualHistoryStore', []);
-const mode = persisted<HistoryType>('autoHistoryMode', 'manual');
-let loader = $state<HistoryEntry[]>([]);
-
-// Loader entries are in-memory, so a persisted 'loader' mode is empty after reload.
-if (mode.value === 'loader') {
-  mode.value = 'manual';
+interface Persisted<T> {
+  value: T;
 }
 
-// The persisted slot backing a mode; loader is in-memory and has no slot.
+interface RemoteHistory {
+  auto: HistoryEntry[];
+  manual: HistoryEntry[];
+}
+
+const memoryPersisted = <T>(initial: T): Persisted<T> => {
+  let value = $state.raw(initial);
+  return {
+    get value() {
+      return value;
+    },
+    set value(next: T) {
+      value = next;
+    }
+  };
+};
+
+const auto = memoryPersisted<HistoryEntry[]>([]);
+const manual = memoryPersisted<HistoryEntry[]>([]);
+const mode = memoryPersisted<HistoryType>('manual');
+let loader = $state<HistoryEntry[]>([]);
+let historyInitPromise: Promise<void> | undefined;
+
+const isTest = import.meta.env.MODE === 'test';
+
+const remoteSnapshot = (): RemoteHistory => ({
+  auto: auto.value,
+  manual: manual.value
+});
+
+const syncRemote = (): void => {
+  if (isTest || typeof window === 'undefined') {
+    return;
+  }
+  void fetch('/api/history', {
+    body: JSON.stringify(remoteSnapshot()),
+    headers: { 'Content-Type': 'application/json' },
+    method: 'PUT'
+  }).catch((error: unknown) => {
+    console.error('Unable to save history to deployment storage', error);
+  });
+};
+
+export const initHistory = (): Promise<void> => {
+  if (historyInitPromise) {
+    return historyInitPromise;
+  }
+  if (isTest || typeof window === 'undefined') {
+    historyInitPromise = Promise.resolve();
+    return historyInitPromise;
+  }
+
+  historyInitPromise = fetch('/api/history')
+    .then(async (response) => {
+      if (!response.ok) {
+        throw new Error(`History request failed with ${response.status}`);
+      }
+      const data = (await response.json()) as Partial<RemoteHistory>;
+      auto.value = Array.isArray(data.auto) ? data.auto : [];
+      manual.value = Array.isArray(data.manual) ? data.manual : [];
+      window.localStorage.removeItem('autoHistoryStore');
+      window.localStorage.removeItem('manualHistoryStore');
+    })
+    .catch((error: unknown) => {
+      console.error('Unable to load history from deployment storage', error);
+    });
+  return historyInitPromise;
+};
+
 const slotFor = (m: HistoryType): Persisted<HistoryEntry[]> | null => {
   switch (m) {
     case 'auto': {
@@ -52,8 +114,6 @@ export const setMode = (next: HistoryType): void => {
   mode.value = next;
 };
 
-// Dedup key: only the fields that define the diagram, so volatile/view-only
-// fields (renderCount, pan/zoom, …) don't count as a change.
 export const stateKey = (state: State): string =>
   JSON.stringify({ code: state.code, mermaid: state.mermaid });
 
@@ -65,7 +125,6 @@ const createEntry = (state: State, type: 'auto' | 'manual', name?: string): Hist
   type
 });
 
-// Returns true if added, false if it duplicated the most recent entry.
 const addEntry = (
   slot: Persisted<HistoryEntry[]>,
   state: State,
@@ -80,6 +139,7 @@ const addEntry = (
   const trimmed =
     maxLength && entries.length >= maxLength ? entries.slice(0, maxLength - 1) : entries;
   slot.value = [createEntry(state, type, name), ...trimmed];
+  syncRemote();
   logEvent('history', { action: 'save', type });
   return true;
 };
@@ -90,7 +150,6 @@ export const addManualEntry = (state: State, name?: string): boolean =>
 export const addAutoEntry = (state: State): boolean =>
   addEntry(auto, state, 'auto', MAX_AUTO_HISTORY_LENGTH);
 
-// Replaces the in-memory revisions (e.g. when a gist is loaded), assigning ids.
 export const setLoaderEntries = (entries: Optional<HistoryEntry, 'id'>[]): void => {
   loader = entries.map((entry) =>
     entry.id ? (entry as HistoryEntry) : { ...entry, id: uuidV4() }
@@ -107,6 +166,7 @@ export const removeEntry = (id: string): void => {
     }
   }
   if (removed) {
+    syncRemote();
     logEvent('history', { action: 'clear', type: 'single' });
   }
 };
@@ -118,6 +178,7 @@ export const renameEntry = (id: string, name: string): void => {
     return;
   }
   slot.value = slot.value.map((entry) => (entry.id === id ? { ...entry, name: trimmed } : entry));
+  syncRemote();
   logEvent('history', { action: 'rename' });
 };
 
@@ -127,6 +188,7 @@ export const clearActive = (): void => {
     return;
   }
   slot.value = [];
+  syncRemote();
   logEvent('history', { action: 'clear', type: 'all' });
 };
 
@@ -139,8 +201,6 @@ export interface RestoreResult {
   duplicates: number;
 }
 
-// Routes each uploaded entry to the store matching its own type, skipping ids
-// that already exist.
 export const restoreEntries = (data: HistoryEntry[]): RestoreResult => {
   const valid = data.filter((entry) => validateEntry(entry));
   const invalid = data.length - valid.length;
@@ -151,7 +211,7 @@ export const restoreEntries = (data: HistoryEntry[]): RestoreResult => {
     ['manual', manual]
   ];
   for (const [type, slot] of slots) {
-    const incoming = valid.filter((entry) => entry.type === type);
+    const incoming = valid.filter(({ type: entryType }) => entryType === type);
     if (incoming.length === 0) {
       continue;
     }
@@ -161,24 +221,34 @@ export const restoreEntries = (data: HistoryEntry[]): RestoreResult => {
     slot.value = [...slot.value, ...fresh].sort((a, b) => b.time - a.time);
   }
 
+  if (restored > 0) {
+    syncRemote();
+  }
   const duplicates = valid.length - restored;
   logEvent('history', { action: 'restore', duplicates, invalid, success: restored });
   return { restored, invalid, duplicates };
 };
 
-const setIDs = (entries: HistoryEntry[]): HistoryEntry[] =>
-  entries.map((entry) => (entry.id ? entry : { ...entry, id: uuidV4() }));
-
-// One-time migration: re-reads localStorage so entries written by an older
-// version get ids, then persists and updates the reactive state.
+// The old migration remains test-compatible, but production history is loaded
+// from the authenticated deployment API and never reads these browser keys.
 export const injectHistoryIDs = (): void => {
-  auto.value = setIDs(readJSON<HistoryEntry[]>('autoHistoryStore', []));
-  manual.value = setIDs(readJSON<HistoryEntry[]>('manualHistoryStore', []));
+  if (!isTest) {
+    return;
+  }
+  for (const [key, type] of [
+    ['manualHistoryStore', 'manual'],
+    ['autoHistoryStore', 'auto']
+  ] as const) {
+    const entries = readJSON<HistoryEntry[]>(key, []);
+    writeJSON(
+      key,
+      entries.map((entry) => (entry.id ? entry : { ...entry, id: uuidV4(), type }))
+    );
+  }
 };
 
 let autoSaveTimer: ReturnType<typeof setInterval> | undefined;
 
-// Idempotent; returns the stop function for use as a lifecycle cleanup.
 export const startAutoSave = (): (() => void) => {
   if (autoSaveTimer === undefined) {
     autoSaveTimer = setInterval(

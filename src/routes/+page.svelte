@@ -5,10 +5,17 @@
   import { serializeState } from '$lib/util/serde';
   import { urls } from '$lib/util/state.svelte';
   import { Button } from '$lib/components/ui/button';
+  import { initHistory } from '$lib/components/History/historyState.svelte';
   import dayjs from 'dayjs';
   import dayjsRelativeTime from 'dayjs/plugin/relativeTime';
 
   dayjs.extend(dayjsRelativeTime);
+
+  import { onMount } from 'svelte';
+
+  onMount(() => {
+    void initHistory();
+  });
 
   const entryUrl = (state: any, name?: string) => {
     const url = new URL('/edit', window.location.origin);

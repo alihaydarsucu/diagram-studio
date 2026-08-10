@@ -3,7 +3,7 @@
   import Card from '$/components/Card/Card.svelte';
   import Editor from '$/components/Editor.svelte';
   import History from '$/components/History/History.svelte';
-  import { addManualEntry, startAutoSave } from '$/components/History/historyState.svelte';
+  import { addManualEntry, initHistory, startAutoSave } from '$/components/History/historyState.svelte';
   import Navbar from '$/components/Navbar.svelte';
   import PanZoomToolbar from '$/components/PanZoomToolbar.svelte';
   import Preset from '$/components/Preset.svelte';
@@ -84,6 +84,10 @@
   };
 
   let editorPane: Resizable.Pane | undefined;
+  onMount(() => {
+    void initHistory();
+  });
+
   $effect(() => {
     if (isMobile) {
       editorPane?.resize(50);
