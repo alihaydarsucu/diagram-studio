@@ -1,9 +1,7 @@
 <script lang="ts">
   import Actions from '$/components/Actions.svelte';
   import Card from '$/components/Card/Card.svelte';
-  import DiagramDocButton from '$/components/DiagramDocumentationButton.svelte';
   import Editor from '$/components/Editor.svelte';
-  import EnhancedEditsButton from '$/components/EnhancedEditsButton.svelte';
   import History from '$/components/History/History.svelte';
   import { startAutoSave } from '$/components/History/historyState.svelte';
   import Navbar from '$/components/Navbar.svelte';
@@ -24,6 +22,7 @@
   import { initHandler } from '$/util/util';
   import { onMount } from 'svelte';
   import CodeIcon from '~icons/custom/code';
+  import ChevronDownIcon from '~icons/material-symbols/keyboard-arrow-down-rounded';
   import DownloadIcon from '~icons/material-symbols/download';
   import HistoryIcon from '~icons/material-symbols/history';
   import GearIcon from '~icons/material-symbols/settings-outline-rounded';
@@ -62,12 +61,14 @@
   onMount(() => startAutoSave());
 
   const downloadVisual = (format: 'PNG' | 'SVG') => {
+    isSaveMenuOpen = false;
     const button = document.querySelector(`[data-testid="download-${format}"]`);
     if (button instanceof HTMLButtonElement) {
       button.click();
     }
   };
 
+  let isSaveMenuOpen = $state(false);
   let isHistoryOpen = $state(false);
 
   let editorPane: Resizable.Pane | undefined;
@@ -96,23 +97,38 @@
       <HistoryIcon />
     </Toggle>
     <Share />
-    <div class="flex items-center gap-1">
+    <div class="relative">
       <Button
         variant="accent"
         size="sm"
-        title="Download diagram as PNG"
-        onclick={() => downloadVisual('PNG')}>
+        aria-expanded={isSaveMenuOpen}
+        aria-haspopup="menu"
+        title="Save diagram"
+        onclick={() => (isSaveMenuOpen = !isSaveMenuOpen)}>
         <DownloadIcon />
-        Save PNG
+        Save diagram
+        <ChevronDownIcon class="size-4" />
       </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        title="Download diagram as SVG"
-        onclick={() => downloadVisual('SVG')}>
-        <DownloadIcon />
-        SVG
-      </Button>
+      {#if isSaveMenuOpen}
+        <div
+          class="absolute top-full right-0 z-50 mt-2 min-w-40 rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
+          role="menu">
+          <button
+            type="button"
+            class="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-left text-sm hover:bg-muted"
+            role="menuitem"
+            onclick={() => downloadVisual('PNG')}>
+            <DownloadIcon class="size-4" /> PNG image
+          </button>
+          <button
+            type="button"
+            class="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-left text-sm hover:bg-muted"
+            role="menuitem"
+            onclick={() => downloadVisual('SVG')}>
+            <DownloadIcon class="size-4" /> SVG image
+          </button>
+        </div>
+      {/if}
     </div>
   </Navbar>
 
@@ -134,9 +150,6 @@
               tabs={editorTabs}
               activeTabID={validatedState.current.editorMode}
               isClosable={false}>
-              {#snippet actions()}
-                <DiagramDocButton />
-              {/snippet}
               <Editor {isMobile} />
             </Card>
 
@@ -149,7 +162,6 @@
         <Resizable.Handle class="mr-1 hidden opacity-0 sm:block" />
         <Resizable.Pane minSize={15} class="relative flex h-full flex-1 flex-col overflow-hidden">
           <View {panZoomState} shouldShowGrid={validatedState.current.grid} />
-          <div class="absolute top-0 left-5 hidden md:block"><EnhancedEditsButton /></div>
           <div class="absolute top-0 right-0"><PanZoomToolbar {panZoomState} /></div>
           <div class="absolute right-0 bottom-0"><VersionSecurityToolbar /></div>
           <div class="absolute bottom-0 left-0 sm:left-5"><SyncRoughToolbar /></div>

@@ -1,23 +1,13 @@
 <script lang="ts">
-  import McWrapper from '$/components/McWrapper.svelte';
   import * as Popover from '$/components/ui/popover';
   import { Switch } from '$/components/ui/switch';
-  import { env } from '$/util/env';
-  import { urls } from '$/util/state.svelte';
-  import { logMermaidChartClick } from '$/util/stats';
   import { cn } from '$/utils';
   import { mode, setMode } from 'mode-watcher';
   import type { Component, Snippet } from 'svelte';
-  import MermaidTailIcon from '~icons/custom/mermaid-tail';
   import AddIcon from '~icons/material-symbols/add-2-rounded';
-  import BookIcon from '~icons/material-symbols/book-2-outline-rounded';
   import DuplicateIcon from '~icons/material-symbols/content-copy-outline-rounded';
   import ContrastIcon from '~icons/material-symbols/contrast';
-  import PluginIcon from '~icons/material-symbols/electrical-services-rounded';
   import MenuIcon from '~icons/material-symbols/menu-rounded';
-  import CommunityIcon from '~icons/material-symbols/person-play-outline-rounded';
-  import PlaygroundIcon from '~icons/material-symbols/shape-line-outline';
-  import MermaidChartIcon from './MermaidChartIcon.svelte';
 
   interface MenuItem {
     label: string;
@@ -32,59 +22,14 @@
   }
 
   const menuItems: MenuItem[] = $derived([
-    { label: 'New', icon: AddIcon, href: urls.current.new, renderer: menuItem },
+    { label: 'New', icon: AddIcon, href: '/edit', renderer: menuItem },
     { label: 'Duplicate', icon: DuplicateIcon, href: window.location.href, renderer: menuItem },
-    {
-      href: urls.current.mermaidChart({ medium: 'main_menu' }).playground,
-      icon: PlaygroundIcon,
-      isSectionEnd: true,
-      label: 'Edit in Playground',
-      onclick: () => logMermaidChartClick('editInPlayground'),
-      renderer: mcMenuItem
-    },
-    {
-      label: 'Mermaid.js',
-      icon: MermaidTailIcon,
-      href: env.docsUrl,
-      renderer: menuItem
-    },
-    {
-      label: 'Documentation',
-      icon: BookIcon,
-      href: `${env.docsUrl}/intro/`,
-      renderer: menuItem
-    },
-    {
-      label: 'Community',
-      icon: CommunityIcon,
-      href: 'https://discord.gg/sKeNQX4Wtj',
-      renderer: menuItem
-    },
-    {
-      checkDiagramType: false,
-      href: urls.current.mermaidChart({ medium: 'main_menu' }).plugins,
-      icon: PluginIcon,
-      label: 'Plugins',
-      onclick: () => logMermaidChartClick('plugins'),
-      renderer: mcMenuItem,
-      sharesData: false
-    },
     {
       href: '#',
       icon: ContrastIcon,
       isSectionEnd: true,
       label: 'Dark Mode',
       renderer: darkModeMenuItem
-    },
-    {
-      checkDiagramType: false,
-      class: 'text-accent border-b-0',
-      href: urls.current.mermaidChart({ medium: 'main_menu' }).home,
-      icon: MermaidChartIcon,
-      label: 'Mermaid',
-      onclick: () => logMermaidChartClick('mermaidHome'),
-      renderer: mcMenuItem,
-      sharesData: false
     }
   ]);
 </script>
@@ -92,7 +37,6 @@
 {#snippet menuItem(options: Omit<MenuItem, 'renderer'>)}
   <a
     href={options.href}
-    target="_blank"
     onclick={options.onclick}
     class={cn(
       'flex items-center justify-start gap-2 border-b-2 p-2 px-3 hover:bg-muted',
@@ -102,16 +46,6 @@
     <options.icon class="size-5" />
     {options.label}
   </a>
-{/snippet}
-
-{#snippet mcMenuItem(item: Omit<MenuItem, 'renderer'>)}
-  <McWrapper
-    side="right"
-    labelPrefix={item.sharesData === false ? 'Opens a new tab in' : undefined}
-    sharesData={item.sharesData}
-    shouldCheckDiagramType={item.checkDiagramType}>
-    {@render menuItem(item)}
-  </McWrapper>
 {/snippet}
 
 {#snippet darkModeMenuItem(options: Omit<MenuItem, 'renderer'>)}

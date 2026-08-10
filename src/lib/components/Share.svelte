@@ -1,13 +1,9 @@
 <script lang="ts">
   import { buttonVariants } from '$/components/ui/button';
   import * as Dialog from '$/components/ui/dialog';
-  import { Separator } from '$/components/ui/separator';
-  import { env } from '$/util/env';
-  import { urls } from '$/util/state.svelte';
   import { asset } from '$app/paths';
   import ShareIcon from '~icons/material-symbols/share';
   import CopyInput from './CopyInput.svelte';
-  import MermaidChartIcon from './MermaidChartIcon.svelte';
 </script>
 
 <Dialog.Root>
@@ -23,27 +19,14 @@
     <div class="flex flex-col gap-4">
       <div class="flex flex-col gap-2">
         <h2 class="flex items-center gap-2">
-          <img class="size-5" src={asset('/favicon.svg')} alt="Mermaid Live Editor" />
-          Mermaid Live Editor
+          <img class="size-5" src={asset('/favicon.svg')} alt="Diagram Studio" />
+          Diagram Studio
         </h2>
         <CopyInput value={window.location.href} />
         <Dialog.Description>
           The content of the diagrams you create never leaves your browser.
         </Dialog.Description>
       </div>
-      {#if env.isEnabledMermaidChartLinks}
-        <Separator />
-        <div class="flex flex-col gap-2">
-          <h2 class="flex items-center gap-2">
-            <MermaidChartIcon class="size-5" />
-            Mermaid Chart Playground
-          </h2>
-          <CopyInput value={urls.current.mermaidChart({ medium: 'share' }).playground} />
-          <Dialog.Description>
-            Opens the Mermaid Chart Playground with Mermaid AI, Visual Editor, and more.
-          </Dialog.Description>
-        </div>
-      {/if}
     </div>
   </Dialog.Content>
 </Dialog.Root>

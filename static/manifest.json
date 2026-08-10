@@ -1,18 +1,18 @@
 {
-	"short_name": "Mermaid",
-	"name": "Mermaid Live Editor",
+	"short_name": "Diagram Studio",
+	"name": "Diagram Studio",
 	"icons": [
 		{
-			"src": "/favicon.png",
-			"type": "image/png",
-			"sizes": "512x512"
+			"src": "/diagram-studio.svg",
+			"type": "image/svg+xml",
+			"sizes": "any"
 		}
 	],
 	"start_url": "/edit",
-	"background_color": "#ff3670",
+	"background_color": "#eff6ff",
 	"display": "standalone",
 	"scope": "/edit",
-	"theme_color": "#ff3670",
-	"description": "FlowChart & Diagrams Editor.",
+	"theme_color": "#1e3a8a",
+	"description": "Create, edit, and save diagrams locally.",
 	"orientation": "natural"
 }

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { historyState, removeEntry } from '$lib/components/History/historyState.svelte';
   import { serializeState } from '$lib/util/serde';
+  import { urls } from '$lib/util/state.svelte';
   import { Button } from '$lib/components/ui/button';
   import dayjs from 'dayjs';
   import dayjsRelativeTime from 'dayjs/plugin/relativeTime';
@@ -14,16 +15,16 @@
   <nav class="border-b bg-card">
     <div class="container mx-auto flex h-16 items-center justify-between px-4">
       <div class="flex items-center gap-2">
-        <span class="text-xl font-bold tracking-tight text-primary">Mermaid Dashboard</span>
+        <span class="text-xl font-bold tracking-tight text-primary">Diagram Studio</span>
       </div>
-      <Button href="/edit" variant="accent">New Project</Button>
+      <Button href={urls.current.new} variant="accent">New Project</Button>
     </div>
   </nav>
 
   <main class="container mx-auto max-w-5xl p-6 sm:p-10">
     <div class="mb-8 flex flex-col gap-2">
       <h1 class="text-3xl font-bold tracking-tight text-foreground">Your Projects</h1>
-      <p class="text-muted-foreground">Manage and organize your Mermaid diagrams</p>
+      <p class="text-muted-foreground">Manage and organize your diagrams</p>
     </div>
 
     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -44,7 +45,7 @@
             <p class="text-lg font-medium">No projects found</p>
             <p class="text-sm">Create your first diagram to get started.</p>
           </div>
-          <Button href="/edit" variant="accent" class="mt-2">Create New Project</Button>
+          <Button href={urls.current.new} variant="accent" class="mt-2">Create New Project</Button>
         </div>
       {/each}
     </div>

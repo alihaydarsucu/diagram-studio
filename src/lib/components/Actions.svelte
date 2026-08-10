@@ -101,8 +101,13 @@ ${svgString}`);
     const a = document.createElement('a');
     a.download = download;
     a.href = href;
+    a.style.display = 'none';
+    document.body.append(a);
     a.click();
     a.remove();
+    if (href.startsWith('blob:')) {
+      setTimeout(() => URL.revokeObjectURL(href), 1000);
+    }
   };
 
   const exportImage = async (event: Event, exporter: Exporter) => {
