@@ -16,7 +16,8 @@ and create as many charts as your own infrastructure supports.
 
 - Edit and preview flowcharts, sequence diagrams, gantt diagrams in real time.
 - Save diagrams as PNG or SVG files
-- Keep named projects in a local dashboard
+- Keep named projects in a deployment-backed dashboard
+- Start with ten embedded-systems project examples for firmware design work
 - Protect a deployment with a configurable password
 - Get a link to a viewer of the diagram so that you can share it with others.
 - Get a link to edit the diagram so that someone else can tweak it and send a new link back
