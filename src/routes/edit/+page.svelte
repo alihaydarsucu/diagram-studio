@@ -23,8 +23,6 @@
   import { initHandler } from '$/util/util';
   import { onMount } from 'svelte';
   import CodeIcon from '~icons/custom/code';
-  import ChevronDownIcon from '~icons/material-symbols/keyboard-arrow-down-rounded';
-  import DownloadIcon from '~icons/material-symbols/download';
   import HistoryIcon from '~icons/material-symbols/history';
   import GearIcon from '~icons/material-symbols/settings-outline-rounded';
 
@@ -65,13 +63,8 @@
   // Record the Timeline for the whole session, not just while the panel is open.
   onMount(() => startAutoSave());
 
-  const downloadVisual = (format: 'PNG' | 'SVG') => {
-    isSaveMenuOpen = false;
-    window.dispatchEvent(new CustomEvent('diagram-export', { detail: format }));
-  };
-
-  let isSaveMenuOpen = $state(false);
   let isActionsOpen = $state(false);
+  let actionsAttention = $state(false);
   let isHistoryOpen = $state(false);
   let projectName = $state('Untitled Project');
 
@@ -81,6 +74,14 @@
     } else {
       notify('This project is already saved.');
     }
+  };
+
+  const openActions = () => {
+    isActionsOpen = true;
+    actionsAttention = true;
+    window.setTimeout(() => {
+      actionsAttention = false;
+    }, 1400);
   };
 
   let editorPane: Resizable.Pane | undefined;
@@ -123,40 +124,8 @@
     </div>
     <Share />
     <div class="relative">
-      <Button
-        variant="accent"
-        size="sm"
-        aria-expanded={isSaveMenuOpen}
-        aria-haspopup="menu"
-        title="Save diagram"
-        onclick={() => {
-          isActionsOpen = true;
-          isSaveMenuOpen = false;
-        }}>
-        <DownloadIcon />
-        Save diagram
-        <ChevronDownIcon class="size-4" />
-      </Button>
-      {#if isSaveMenuOpen}
-        <div
-          class="absolute top-full right-0 z-50 mt-2 min-w-40 rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
-          role="menu">
-          <button
-            type="button"
-            class="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-left text-sm hover:bg-muted"
-            role="menuitem"
-            onclick={() => downloadVisual('PNG')}>
-            <DownloadIcon class="size-4" /> PNG image
-          </button>
-          <button
-            type="button"
-            class="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-left text-sm hover:bg-muted"
-            role="menuitem"
-            onclick={() => downloadVisual('SVG')}>
-            <DownloadIcon class="size-4" /> SVG image
-          </button>
-        </div>
-      {/if}
+      <Button variant="accent" size="sm" title="Save diagram" onclick={openActions}
+        >Save diagram</Button>
     </div>
   </Navbar>
 
@@ -183,7 +152,9 @@
 
             <div class="group flex flex-wrap justify-between gap-4 sm:gap-6">
               <Preset />
-              <Actions bind:isOpen={isActionsOpen} />
+              <div class={['rounded-2xl', actionsAttention && 'actions-attention']}>
+                <Actions bind:isOpen={isActionsOpen} />
+              </div>
             </div>
           </div>
         </Resizable.Pane>
@@ -204,3 +175,21 @@
     </div>
   </div>
 </div>
+
+<style>
+  .actions-attention {
+    animation: actions-attention 1.4s ease-out;
+  }
+
+  @keyframes actions-attention {
+    0% {
+      box-shadow: 0 0 0 0 rgb(37 99 235 / 0.65);
+    }
+    45% {
+      box-shadow: 0 0 0 6px rgb(37 99 235 / 0.18);
+    }
+    100% {
+      box-shadow: 0 0 0 12px rgb(37 99 235 / 0);
+    }
+  }
+</style>
