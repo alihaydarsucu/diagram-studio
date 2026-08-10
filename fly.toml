@@ -7,6 +7,10 @@ app = 'diagram-studio'
 primary_region = 'ams'
 
 [build]
+
+[env]
+  DIAGRAM_STUDIO_AUTH_USER = 'Ali Haydar'
+
 [http_service]
   internal_port = 8080
   force_https = true

@@ -39,7 +39,8 @@
     <div class="container mx-auto flex h-16 items-center justify-between px-4">
       <div class="flex items-center gap-2">
         <img class="size-9 rounded-md" src={asset('/diagram-studio.png')} alt="Diagram Studio" />
-        <span class="text-xl font-bold tracking-tight text-primary">Diagram Studio</span>
+        <span class="text-xl font-bold tracking-tight text-slate-950 dark:text-slate-100"
+          >Diagram Studio</span>
       </div>
       <Button variant="accent" onclick={newProject}>New Project</Button>
     </div>

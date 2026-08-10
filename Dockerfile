@@ -33,5 +33,12 @@ ENTRYPOINT ["pnpm", "dev"]
 
 FROM nginx:1.28-alpine3.21 AS mermaid
 
+RUN apk --no-cache add apache2-utils
+
 COPY ./nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=mermaid-live-editor-builder /app/docs /usr/share/nginx/html
+COPY ./docker-entrypoint.sh /usr/local/bin/diagram-studio-entrypoint.sh
+
+RUN chmod +x /usr/local/bin/diagram-studio-entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/diagram-studio-entrypoint.sh"]
