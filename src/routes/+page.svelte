@@ -102,6 +102,16 @@
       updateTags(tagProject.id, (tagProject.tags ?? []).filter((item) => item !== tag));
     }
   };
+  const toggleProjectTag = (tag: string) => {
+    if (!tagProject) {
+      return;
+    }
+    const tags = tagProject.tags ?? [];
+    updateTags(
+      tagProject.id,
+      tags.includes(tag) ? tags.filter((item) => item !== tag) : [...tags, tag]
+    );
+  };
 </script>
 
 <div class="h-full overflow-y-auto bg-background">
@@ -265,15 +275,32 @@
         <Input bind:value={tagInput} placeholder="e.g. Firmware" aria-label="New tag" />
         <Button variant="accent" onclick={addTag}>Add</Button>
       </div>
-      <div class="flex flex-wrap gap-2">
-        {#each tagProject?.tags ?? [] as tag (tag)}
-          <button
-            type="button"
-            class="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-sm"
-            onclick={() => removeTag(tag)}>{tag}<CloseIcon class="size-3.5" /></button>
-        {:else}
-          <span class="text-sm text-muted-foreground">No tags added yet.</span>
-        {/each}
+      <div class="flex flex-col gap-2">
+        <span class="text-sm font-medium">Available tags</span>
+        <div class="flex flex-wrap gap-2">
+          {#each allTags as tag (tag)}
+            <button
+              type="button"
+              class={`rounded-full border px-3 py-1 text-sm transition ${tagProject?.tags?.includes(tag) ? 'border-accent bg-accent text-accent-foreground' : 'border-border bg-background hover:border-accent'}`}
+              aria-pressed={tagProject?.tags?.includes(tag)}
+              onclick={() => toggleProjectTag(tag)}>{tag}</button>
+          {:else}
+            <span class="text-sm text-muted-foreground">No shared tags yet.</span>
+          {/each}
+        </div>
+      </div>
+      <div class="flex flex-col gap-2">
+        <span class="text-sm font-medium">Selected tags</span>
+        <div class="flex flex-wrap gap-2">
+          {#each tagProject?.tags ?? [] as tag (tag)}
+            <button
+              type="button"
+              class="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-sm"
+              onclick={() => removeTag(tag)}>{tag}<CloseIcon class="size-3.5" /></button>
+          {:else}
+            <span class="text-sm text-muted-foreground">No tags added yet.</span>
+          {/each}
+        </div>
       </div>
     </div>
   </Dialog.Content>
