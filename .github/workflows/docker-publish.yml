@@ -3,16 +3,13 @@ name: Docker
 on:
   push:
     branches:
-      # Publish `master` as Docker `latest` image.
-      - master
-      # Publish `develop` as Docker `nightly` image.
-      - develop
+      # Publish `main` as Docker `latest` image.
+      - main
 
-  # Run tests for all PRs to master and develop.
+  # Run tests for all PRs to main.
   pull_request:
     branches:
-      - master
-      - develop
+      - main
 
 jobs:
   docker:
@@ -38,8 +35,7 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            type=raw,value=latest,enable=${{ github.ref_name == 'master' }}
-            type=raw,value=nightly,enable=${{ github.ref_name == 'develop' }}
+            type=raw,value=latest,enable=${{ github.ref_name == 'main' }}
       - uses: docker/build-push-action@v5
         id: build
         with:

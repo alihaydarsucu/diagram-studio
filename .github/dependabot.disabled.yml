@@ -2,21 +2,21 @@ version: 2
 updates:
   - package-ecosystem: docker
     directory: /
-    target-branch: develop
+    target-branch: main
     schedule:
       interval: weekly
       day: friday
       time: '07:00'
   - package-ecosystem: github-actions
     directory: /
-    target-branch: develop
+    target-branch: main
     schedule:
       interval: weekly
       day: friday
       time: '07:00'
   - package-ecosystem: npm
     directory: /
-    target-branch: develop
+    target-branch: main
     schedule:
       interval: weekly
       day: friday
