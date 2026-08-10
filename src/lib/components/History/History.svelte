@@ -115,6 +115,12 @@
     replaceInputState({ ...state, updateDiagram: true });
   };
 
+  const confirmRemoveEntry = (id: string): void => {
+    if (prompt('Delete this project? This action cannot be undone.')) {
+      removeEntry(id);
+    }
+  };
+
   // Absolute editor URL for an entry, so the link can be opened in a new tab or copied.
   const entryUrl = (state: State): string =>
     `${window.location.origin}${window.location.pathname}#${serializeState(state)}`;
@@ -234,7 +240,7 @@
                   variant="ghost"
                   class="hover:text-destructive"
                   title="Delete this version"
-                  onclick={() => removeEntry(id)}>
+                  onclick={() => confirmRemoveEntry(id)}>
                   <TrashAltIcon />
                 </Button>
               {/if}

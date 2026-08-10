@@ -3,7 +3,7 @@
 	"name": "Diagram Studio",
 	"icons": [
 		{
-			"src": "/diagram-studio.png",
+			"src": "/diagram-studio.png?v=2",
 			"type": "image/png",
 			"sizes": "512x512"
 		}

@@ -57,9 +57,9 @@ export const setMode = (next: HistoryType): void => {
 export const stateKey = (state: State): string =>
   JSON.stringify({ code: state.code, mermaid: state.mermaid });
 
-const createEntry = (state: State, type: 'auto' | 'manual'): HistoryEntry => ({
+const createEntry = (state: State, type: 'auto' | 'manual', name?: string): HistoryEntry => ({
   id: uuidV4(),
-  name: generateSlug(2),
+  name: name?.trim() || generateSlug(2),
   state,
   time: Date.now(),
   type
@@ -70,7 +70,8 @@ const addEntry = (
   slot: Persisted<HistoryEntry[]>,
   state: State,
   type: 'auto' | 'manual',
-  maxLength?: number
+  maxLength?: number,
+  name?: string
 ): boolean => {
   const entries = slot.value;
   if (entries.length > 0 && stateKey(entries[0].state) === stateKey(state)) {
@@ -78,12 +79,13 @@ const addEntry = (
   }
   const trimmed =
     maxLength && entries.length >= maxLength ? entries.slice(0, maxLength - 1) : entries;
-  slot.value = [createEntry(state, type), ...trimmed];
+  slot.value = [createEntry(state, type, name), ...trimmed];
   logEvent('history', { action: 'save', type });
   return true;
 };
 
-export const addManualEntry = (state: State): boolean => addEntry(manual, state, 'manual');
+export const addManualEntry = (state: State, name?: string): boolean =>
+  addEntry(manual, state, 'manual', undefined, name);
 
 export const addAutoEntry = (state: State): boolean =>
   addEntry(auto, state, 'auto', MAX_AUTO_HISTORY_LENGTH);

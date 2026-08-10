@@ -3,7 +3,7 @@
   import Card from '$/components/Card/Card.svelte';
   import Editor from '$/components/Editor.svelte';
   import History from '$/components/History/History.svelte';
-  import { startAutoSave } from '$/components/History/historyState.svelte';
+  import { addManualEntry, startAutoSave } from '$/components/History/historyState.svelte';
   import Navbar from '$/components/Navbar.svelte';
   import PanZoomToolbar from '$/components/PanZoomToolbar.svelte';
   import Preset from '$/components/Preset.svelte';
@@ -17,7 +17,8 @@
   import View from '$/components/View.svelte';
   import type { EditorMode, Tab } from '$/types';
   import { PanZoomState } from '$/util/panZoom';
-  import { validatedState, updateCodeStore } from '$/util/state.svelte';
+  import { inputState, validatedState, updateCodeStore } from '$/util/state.svelte';
+  import { notify } from '$/util/notify';
   import { logEvent } from '$/util/stats';
   import { initHandler } from '$/util/util';
   import { onMount } from 'svelte';
@@ -51,6 +52,10 @@
   let isMobile = $derived(width < 640);
   let isViewMode = $state(true);
   onMount(async () => {
+    const name = new URLSearchParams(window.location.search).get('projectName');
+    if (name) {
+      projectName = name;
+    }
     await initHandler();
     window.addEventListener('appinstalled', () => {
       logEvent('pwaInstalled', { isMobile });
@@ -67,6 +72,15 @@
 
   let isSaveMenuOpen = $state(false);
   let isHistoryOpen = $state(false);
+  let projectName = $state('Untitled Project');
+
+  const saveProject = () => {
+    if (addManualEntry($state.snapshot(inputState), projectName)) {
+      notify('Project saved.');
+    } else {
+      notify('This project is already saved.');
+    }
+  };
 
   let editorPane: Resizable.Pane | undefined;
   $effect(() => {
@@ -93,6 +107,15 @@
     <Toggle bind:pressed={isHistoryOpen} size="sm" title="History" aria-label="History">
       <HistoryIcon />
     </Toggle>
+    <div class="flex items-center gap-1">
+      <input
+        class="h-8 w-28 rounded-md border border-input bg-background px-2 text-xs sm:w-36"
+        bind:value={projectName}
+        aria-label="Project name"
+        placeholder="Project name" />
+      <Button size="sm" variant="outline" title="Save project" onclick={saveProject}
+        >Save project</Button>
+    </div>
     <Share />
     <div class="relative">
       <Button

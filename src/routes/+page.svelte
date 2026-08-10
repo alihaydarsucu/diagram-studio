@@ -1,5 +1,6 @@
 <script lang="ts">
   import { asset } from '$app/paths';
+  import { goto } from '$app/navigation';
   import { historyState, removeEntry } from '$lib/components/History/historyState.svelte';
   import { serializeState } from '$lib/util/serde';
   import { urls } from '$lib/util/state.svelte';
@@ -9,7 +10,28 @@
 
   dayjs.extend(dayjsRelativeTime);
 
-  const entryUrl = (state: any) => `/edit#${serializeState(state)}`;
+  const entryUrl = (state: any, name?: string) => {
+    const url = new URL('/edit', window.location.origin);
+    if (name) {
+      url.searchParams.set('projectName', name);
+    }
+    url.hash = serializeState(state);
+    return `${url.pathname}${url.search}${url.hash}`;
+  };
+  const newProject = () => {
+    const name = window.prompt('Project name', 'Untitled Project');
+    if (name === null) {
+      return;
+    }
+    const url = new URL(urls.current.new, window.location.origin);
+    url.searchParams.set('projectName', name.trim() || 'Untitled Project');
+    void goto(`${url.pathname}${url.search}${url.hash}`);
+  };
+  const confirmDelete = (id: string) => {
+    if (window.confirm('Delete this project? This action cannot be undone.')) {
+      removeEntry(id);
+    }
+  };
 </script>
 
 <div class="min-h-screen bg-background">
@@ -19,7 +41,7 @@
         <img class="size-9 rounded-md" src={asset('/diagram-studio.png')} alt="Diagram Studio" />
         <span class="text-xl font-bold tracking-tight text-primary">Diagram Studio</span>
       </div>
-      <Button href={urls.current.new} variant="accent">New Project</Button>
+      <Button variant="accent" onclick={newProject}>New Project</Button>
     </div>
   </nav>
 
@@ -31,23 +53,33 @@
 
     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {#each historyState.allEntries as entry (entry.id)}
-        <div class="group flex flex-col justify-between gap-4 rounded-xl border bg-card p-5 text-card-foreground shadow-sm transition-all hover:border-accent hover:shadow-md">
+        <div
+          class="group flex flex-col justify-between gap-4 rounded-xl border bg-card p-5 text-card-foreground shadow-sm transition-all hover:border-accent hover:shadow-md">
           <div class="flex flex-col gap-1">
-            <a href={entryUrl(entry.state)} class="truncate text-lg font-semibold hover:text-accent" title={entry.name}>{entry.name || 'Untitled Project'}</a>
+            <a
+              href={entryUrl(entry.state, entry.name)}
+              class="truncate text-lg font-semibold hover:text-accent"
+              title={entry.name}>{entry.name || 'Untitled Project'}</a>
             <span class="text-xs text-muted-foreground">{dayjs(entry.time).fromNow()}</span>
           </div>
           <div class="mt-4 flex items-center justify-between border-t pt-4">
-            <Button href={entryUrl(entry.state)} variant="outline" size="sm">Open Editor</Button>
-            <Button variant="ghost" class="text-destructive hover:bg-destructive/10" size="sm" onclick={() => removeEntry(entry.id)}>Delete</Button>
+            <Button href={entryUrl(entry.state, entry.name)} variant="outline" size="sm"
+              >Open Editor</Button>
+            <Button
+              variant="ghost"
+              class="text-destructive hover:bg-destructive/10"
+              size="sm"
+              onclick={() => confirmDelete(entry.id)}>Delete</Button>
           </div>
         </div>
       {:else}
-        <div class="col-span-full flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-border py-16 text-center bg-muted/10">
+        <div
+          class="col-span-full flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-border py-16 text-center bg-muted/10">
           <div class="text-muted-foreground">
             <p class="text-lg font-medium">No projects found</p>
             <p class="text-sm">Create your first diagram to get started.</p>
           </div>
-          <Button href={urls.current.new} variant="accent" class="mt-2">Create New Project</Button>
+          <Button variant="accent" class="mt-2" onclick={newProject}>Create New Project</Button>
         </div>
       {/each}
     </div>

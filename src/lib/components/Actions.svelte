@@ -12,6 +12,7 @@
   import { browser } from '$app/environment';
   import { waitForRender } from '$lib/util/autoSync';
   import { inputState, updateCodeStore, urls, validatedState } from '$lib/util/state.svelte';
+  import { notify } from '$lib/util/notify';
   import { logEvent } from '$lib/util/stats';
   import { version as FAVersion } from '@fortawesome/fontawesome-free/package.json';
   import dayjs from 'dayjs';
@@ -173,10 +174,7 @@ ${svgString}`);
     return () => {
       const { canvas } = context;
       context.drawImage(image, 0, 0, canvas.width, canvas.height);
-      simulateDownload(
-        getFileName('png'),
-        canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream')
-      );
+      simulateDownload(getFileName('png'), canvas.toDataURL('image/png'));
     };
   };
 
@@ -231,7 +229,10 @@ ${svgString}`);
     const handleExport = (event: Event) => {
       const format = (event as CustomEvent<'PNG' | 'SVG'>).detail;
       if (format === 'PNG') {
-        void onDownloadPNG(event);
+        void onDownloadPNG(event).catch((error: unknown) => {
+          console.error(error);
+          notify('PNG export failed. Please try SVG instead.');
+        });
       } else if (format === 'SVG') {
         onDownloadSVG();
       }
