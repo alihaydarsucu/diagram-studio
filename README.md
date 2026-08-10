@@ -4,25 +4,36 @@
 
 # Diagram Studio
 
-Diagram Studio is an open-source Mermaid diagram editor that you can download,
-run, customize, and deploy wherever you prefer.
+Diagram Studio is a self-hostable, open-source Mermaid editor for people who
+want a focused workspace they control. It keeps the familiar Mermaid editing
+experience while removing the surrounding premium-service promotions and
+external calls-to-action that are not needed for creating diagrams.
 
-The project is designed for people who want their own private diagram editor,
-without Mermaid Pro or premium-service promotions. You can deploy it on Fly.io,
-Docker, a VPS, or another hosting provider, choose your own access password,
-and create as many charts as your own infrastructure supports.
+Unlike a hosted editor tied to another service, you can run Diagram Studio on
+your own domain, behind your own password, and with your own storage. Named
+projects and diagram history live in the deployment volume, so the same private
+workspace can be reached from different devices and browsers. There is no
+artificial project limit: you can create as many projects as your deployment’s
+storage and compute resources support.
 
-## Features
+The goal is simple: a Mermaid-based diagram studio without promotional links,
+with privacy, portability, and self-hosting as first-class features.
 
-- Edit and preview flowcharts, sequence diagrams, gantt diagrams in real time.
-- Save diagrams as PNG or SVG files
-- Keep named projects in a deployment-backed dashboard
-- Start with ten embedded-systems project examples for firmware design work
-- Protect a deployment with a configurable password
-- Get a link to a viewer of the diagram so that you can share it with others.
-- Get a link to edit the diagram so that someone else can tweak it and send a new link back
+<details open>
+<summary><strong>Features</strong></summary>
 
-## Screenshots
+- Edit and preview flowcharts, sequence diagrams, Gantt charts, and more in real time.
+- Export diagrams directly as PNG or SVG files.
+- Manage named projects from a deployment-backed dashboard.
+- Start with ten embedded-systems examples for firmware design work.
+- Protect the workspace with a configurable password.
+- Share viewer or editor links when you explicitly choose to share a diagram.
+- Customize the domain, renderer settings, logo, theme, and deployment environment.
+
+</details>
+
+<details open>
+<summary><strong>Screenshots</strong></summary>
 
 ### Project dashboard
 
@@ -36,12 +47,21 @@ and create as many charts as your own infrastructure supports.
   <img src="static/screenshots/editor.png" alt="Diagram Studio diagram editor" />
 </p>
 
-## Open-source self-hosting
+</details>
+
+<details>
+<summary><strong>Self-hosting and privacy</strong></summary>
 
 You are free to download this repository, modify it, and deploy your own copy.
 Each deployment can use its own domain, renderer settings, logo, theme, and
 password. Authenticated project history and named diagrams are stored in the
-deployment’s persistent data volume, not only in an individual browser.
+deployment’s persistent data volume, not only in an individual browser. This
+lets you access your workspace privately from anywhere while keeping control of
+the hosting environment and data lifecycle.
+
+The editor does not show Mermaid Pro, Mermaid Chart, or other promotional
+redirects in the workspace. Renderer or Kroki requests are only made when you
+explicitly use an export or integration link.
 
 ### Password protection
 
@@ -75,7 +95,10 @@ The default login name is `Ali Haydar` and can be changed with
 The server stores history in `/data/history.json`. Mount `/data` to a
 persistent volume in production so projects survive restarts and redeploys.
 
-## Docker
+</details>
+
+<details>
+<summary><strong>Docker</strong></summary>
 
 Build the image yourself so you control the password and deployment settings.
 
@@ -120,6 +143,7 @@ docker build -t diagram-studio .
 
 ```bash
 docker run --detach --name diagram-studio --publish 8080:8080 \
+  --volume diagram-studio-data:/data \
   --env DIAGRAM_STUDIO_AUTH_USER="Ali Haydar" \
   --env DIAGRAM_STUDIO_PASSWORD="choose-a-password" \
   diagram-studio
@@ -133,7 +157,10 @@ Visit: <http://localhost:8080>
 docker stop diagram-studio
 ```
 
-## Setup
+</details>
+
+<details>
+<summary><strong>Setup and development</strong></summary>
 
 Below link will help you making a copy of the repository in your local system.
 
@@ -153,9 +180,14 @@ pnpm dev -- --open
 
 This app is created with Svelte Kit.
 
-## Privacy and scope
+</details>
 
-This fork removes Mermaid Pro/Chart promotional UI and external Mermaid
-branding from the editor. Project history is stored in the authenticated
-deployment volume. Renderer and Kroki requests only occur when you explicitly
-use those export links.
+<details>
+<summary><strong>Project scope</strong></summary>
+
+Diagram Studio is an independent self-hosted project built on Mermaid’s open
+source editor foundations. It is not an official Mermaid Pro or Mermaid Chart
+service. Its purpose is to provide a private, portable editor without premium
+promotional UI, while preserving Mermaid diagram creation and export workflows.
+
+</details>
