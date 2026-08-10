@@ -71,6 +71,7 @@
   };
 
   let isSaveMenuOpen = $state(false);
+  let isActionsOpen = $state(false);
   let isHistoryOpen = $state(false);
   let projectName = $state('Untitled Project');
 
@@ -124,7 +125,10 @@
         aria-expanded={isSaveMenuOpen}
         aria-haspopup="menu"
         title="Save diagram"
-        onclick={() => (isSaveMenuOpen = !isSaveMenuOpen)}>
+        onclick={() => {
+          isActionsOpen = true;
+          isSaveMenuOpen = false;
+        }}>
         <DownloadIcon />
         Save diagram
         <ChevronDownIcon class="size-4" />
@@ -175,7 +179,7 @@
 
             <div class="group flex flex-wrap justify-between gap-4 sm:gap-6">
               <Preset />
-              <Actions />
+              <Actions bind:isOpen={isActionsOpen} />
             </div>
           </div>
         </Resizable.Pane>

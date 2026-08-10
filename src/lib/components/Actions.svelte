@@ -22,6 +22,12 @@
   import ExternalLinkIcon from '~icons/material-symbols/open-in-new-rounded';
   import WidthIcon from '~icons/material-symbols/width-rounded';
 
+  interface Props {
+    isOpen?: boolean;
+  }
+
+  let { isOpen = $bindable(false) }: Props = $props();
+
   const FONT_AWESOME_URL = `https://cdnjs.cloudflare.com/ajax/libs/font-awesome/${FAVersion}/css/all.min.css`;
 
   type Exporter = (context: CanvasRenderingContext2D, image: HTMLImageElement) => () => void;
@@ -288,7 +294,7 @@ ${svgString}`);
   </div>
 {/snippet}
 
-<Card title="Actions" isStackable icon={{ component: DownloadIcon, class: 'rotate-180' }}>
+<Card {isOpen} title="Actions" isStackable icon={{ component: DownloadIcon, class: 'rotate-180' }}>
   <div class="flex min-w-fit flex-col gap-2 p-2">
     <div class="flex w-full items-center gap-2 py-2 whitespace-nowrap">
       PNG size
