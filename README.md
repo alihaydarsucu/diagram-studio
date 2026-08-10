@@ -55,6 +55,7 @@ For a local Docker deployment:
 docker build -t diagram-studio .
 docker run --detach --name diagram-studio \
   --publish 8080:8080 \
+  --volume diagram-studio-data:/data \
   --env DIAGRAM_STUDIO_AUTH_USER="Ali Haydar" \
   --env DIAGRAM_STUDIO_PASSWORD="choose-a-password" \
   diagram-studio
@@ -69,6 +70,9 @@ fly deploy
 
 The default login name is `Ali Haydar` and can be changed with
 `DIAGRAM_STUDIO_AUTH_USER`.
+
+The server stores history in `/data/history.json`. Mount `/data` to a
+persistent volume in production so projects survive restarts and redeploys.
 
 ## Docker
 

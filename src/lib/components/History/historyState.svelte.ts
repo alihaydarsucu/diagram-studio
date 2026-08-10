@@ -70,8 +70,24 @@ export const initHistory = (): Promise<void> => {
         throw new Error(`History request failed with ${response.status}`);
       }
       const data = (await response.json()) as Partial<RemoteHistory>;
-      auto.value = Array.isArray(data.auto) ? data.auto : [];
-      manual.value = Array.isArray(data.manual) ? data.manual : [];
+      const remoteAuto = Array.isArray(data.auto) ? data.auto : [];
+      const remoteManual = Array.isArray(data.manual) ? data.manual : [];
+      const localAuto = readJSON<HistoryEntry[]>('autoHistoryStore', []);
+      const localManual = readJSON<HistoryEntry[]>('manualHistoryStore', []);
+      const shouldMigrate =
+        remoteAuto.length === 0 &&
+        remoteManual.length === 0 &&
+        (localAuto.length > 0 || localManual.length > 0);
+
+      auto.value = shouldMigrate ? localAuto : remoteAuto;
+      manual.value = shouldMigrate ? localManual : remoteManual;
+      if (shouldMigrate) {
+        await fetch('/api/history', {
+          body: JSON.stringify(remoteSnapshot()),
+          headers: { 'Content-Type': 'application/json' },
+          method: 'PUT'
+        });
+      }
       window.localStorage.removeItem('autoHistoryStore');
       window.localStorage.removeItem('manualHistoryStore');
     })
