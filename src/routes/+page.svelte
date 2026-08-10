@@ -55,8 +55,8 @@
   };
 </script>
 
-<div class="min-h-screen bg-background">
-  <nav class="border-b bg-card">
+<div class="h-full overflow-y-auto bg-background">
+  <nav class="sticky top-0 z-10 border-b bg-card">
     <div class="container mx-auto flex h-16 items-center justify-between px-4">
       <div class="flex items-center gap-2">
         <img class="size-9 rounded-md" src={asset('/diagram-studio.png')} alt="Diagram Studio" />
