@@ -1,7 +1,11 @@
 <script lang="ts">
   import { asset } from '$app/paths';
   import { goto } from '$app/navigation';
-  import { historyState, removeEntry } from '$lib/components/History/historyState.svelte';
+  import {
+    historyState,
+    removeEntry,
+    toggleFavorite
+  } from '$lib/components/History/historyState.svelte';
   import { serializeState } from '$lib/util/serde';
   import { urls } from '$lib/util/state.svelte';
   import { Button } from '$lib/components/ui/button';
@@ -10,6 +14,8 @@
   import { initHistory } from '$lib/components/History/historyState.svelte';
   import dayjs from 'dayjs';
   import dayjsRelativeTime from 'dayjs/plugin/relativeTime';
+  import StarIcon from '~icons/material-symbols/star-rounded';
+  import StarOutlineIcon from '~icons/material-symbols/star-outline-rounded';
 
   dayjs.extend(dayjsRelativeTime);
 
@@ -19,6 +25,15 @@
   let newProjectName = $state('Untitled Project');
   let deleteProjectId = $state<string | null>(null);
   let deleteProjectOpen = $state(false);
+  let projectSearch = $state('');
+  let showFavorites = $state(false);
+
+  const visibleProjects = $derived(
+    historyState.allEntries.filter((entry) => {
+      const matchesSearch = entry.name?.toLowerCase().includes(projectSearch.trim().toLowerCase());
+      return matchesSearch && (!showFavorites || entry.favorite);
+    })
+  );
 
   onMount(() => {
     void initHistory();
@@ -73,15 +88,41 @@
       <p class="text-muted-foreground">Manage and organize your diagrams</p>
     </div>
 
+    <div class="mb-6 flex w-full max-w-xl items-center gap-2">
+      <input
+        class="h-10 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/30"
+        bind:value={projectSearch}
+        placeholder="Search projects..."
+        aria-label="Search projects" />
+      <Button
+        variant={showFavorites ? 'accent' : 'outline'}
+        size="icon"
+        aria-label="Show favorite projects"
+        title="Show favorite projects"
+        onclick={() => (showFavorites = !showFavorites)}>
+        {#if showFavorites}<StarIcon />{:else}<StarOutlineIcon />{/if}
+      </Button>
+    </div>
+
     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {#each historyState.allEntries as entry (entry.id)}
+      {#each visibleProjects as entry (entry.id)}
         <div
           class="group flex flex-col justify-between gap-4 rounded-xl border bg-card p-5 text-card-foreground shadow-sm transition-all hover:border-accent hover:shadow-md">
           <div class="flex flex-col gap-1">
-            <a
-              href={entryUrl(entry.state, entry.name)}
-              class="truncate text-lg font-semibold hover:text-accent"
-              title={entry.name}>{entry.name || 'Untitled Project'}</a>
+            <div class="flex min-w-0 items-center gap-2">
+              <a
+                href={entryUrl(entry.state, entry.name)}
+                class="truncate text-lg font-semibold hover:text-accent"
+                title={entry.name}>{entry.name || 'Untitled Project'}</a>
+              <button
+                type="button"
+                class="shrink-0 rounded p-1 text-amber-500 hover:bg-amber-500/10"
+                aria-label={entry.favorite ? 'Remove from favorites' : 'Add to favorites'}
+                title={entry.favorite ? 'Remove from favorites' : 'Add to favorites'}
+                onclick={() => toggleFavorite(entry.id)}>
+                {#if entry.favorite}<StarIcon class="size-4" />{:else}<StarOutlineIcon class="size-4" />{/if}
+              </button>
+            </div>
             <span class="text-xs text-muted-foreground">{dayjs(entry.time).fromNow()}</span>
           </div>
           <div class="mt-4 flex items-center justify-between border-t pt-4">
@@ -98,8 +139,8 @@
         <div
           class="col-span-full flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-border py-16 text-center bg-muted/10">
           <div class="text-muted-foreground">
-            <p class="text-lg font-medium">No projects found</p>
-            <p class="text-sm">Create your first diagram to get started.</p>
+            <p class="text-lg font-medium">{showFavorites ? 'No favorite projects' : 'No projects found'}</p>
+            <p class="text-sm">{showFavorites ? 'Mark a project with the star icon to find it here.' : 'Create your first diagram to get started.'}</p>
           </div>
           <Button variant="accent" class="mt-2" onclick={newProject}>Create New Project</Button>
         </div>

@@ -276,6 +276,20 @@ export const renameEntry = (id: string, name: string): void => {
   logEvent('history', { action: 'rename' });
 };
 
+export const toggleFavorite = (id: string): void => {
+  for (const slot of [auto, manual]) {
+    const entry = slot.value.find((item) => item.id === id);
+    if (!entry) {
+      continue;
+    }
+    slot.value = slot.value.map((item) =>
+      item.id === id ? { ...item, favorite: !item.favorite } : item
+    );
+    syncRemote();
+    return;
+  }
+};
+
 export const clearActive = (): void => {
   const slot = slotFor(mode.value);
   if (!slot) {
