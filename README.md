@@ -66,9 +66,8 @@ explicitly use an export or integration link.
 ### Password protection
 
 The production image serves a custom login page and protects the workspace
-with a signed, server-side session. Set the password as the
-`DIAGRAM_STUDIO_PASSWORD` environment variable; do not commit the password to
-the repository.
+with a signed, server-side session. Set both the username and password as
+deployment secrets; do not commit either value to the repository.
 
 For a local Docker deployment:
 
@@ -77,20 +76,18 @@ docker build -t diagram-studio .
 docker run --detach --name diagram-studio \
   --publish 8080:8080 \
   --volume diagram-studio-data:/data \
-  --env DIAGRAM_STUDIO_AUTH_USER="Ali Haydar" \
+  --env DIAGRAM_STUDIO_AUTH_USER="choose-a-username" \
   --env DIAGRAM_STUDIO_PASSWORD="choose-a-password" \
   diagram-studio
 ```
 
-For Fly.io, use a runtime secret:
+For Fly.io, use runtime secrets:
 
 ```bash
+fly secrets set DIAGRAM_STUDIO_AUTH_USER="choose-a-username" --app your-app-name
 fly secrets set DIAGRAM_STUDIO_PASSWORD="choose-a-password" --app your-app-name
 fly deploy
 ```
-
-The default login name is `Ali Haydar` and can be changed with
-`DIAGRAM_STUDIO_AUTH_USER`.
 
 The server stores history in `/data/history.json`. Mount `/data` to a
 persistent volume in production so projects survive restarts and redeploys.
@@ -144,7 +141,7 @@ docker build -t diagram-studio .
 ```bash
 docker run --detach --name diagram-studio --publish 8080:8080 \
   --volume diagram-studio-data:/data \
-  --env DIAGRAM_STUDIO_AUTH_USER="Ali Haydar" \
+  --env DIAGRAM_STUDIO_AUTH_USER="choose-a-username" \
   --env DIAGRAM_STUDIO_PASSWORD="choose-a-password" \
   diagram-studio
 ```

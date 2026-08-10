@@ -2,7 +2,7 @@
   import { goto } from '$app/navigation';
   import { asset } from '$app/paths';
 
-  let username = $state('Ali Haydar');
+  let username = $state('');
   let password = $state('');
   let errorMessage = $state('');
   let isSubmitting = $state(false);

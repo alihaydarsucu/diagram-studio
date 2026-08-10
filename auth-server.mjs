@@ -5,8 +5,11 @@ import { extname, join, normalize, relative, resolve } from 'node:path';
 
 const port = Number(process.env.PORT || 8080);
 const root = resolve(process.env.DIAGRAM_STUDIO_DOCS_ROOT || '/app/docs');
-const authUser = process.env.DIAGRAM_STUDIO_AUTH_USER || 'Ali Haydar';
+const authUser = process.env.DIAGRAM_STUDIO_AUTH_USER;
 const authPassword = process.env.DIAGRAM_STUDIO_PASSWORD;
+if (!authUser) {
+  throw new Error('DIAGRAM_STUDIO_AUTH_USER must be set before starting Diagram Studio');
+}
 const sessionSecret = createHash('sha256')
   .update(`${authUser}\0${authPassword || ''}`)
   .digest();
