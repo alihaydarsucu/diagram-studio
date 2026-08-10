@@ -21,9 +21,19 @@ and create as many charts as your own infrastructure supports.
 - Get a link to a viewer of the diagram so that you can share it with others.
 - Get a link to edit the diagram so that someone else can tweak it and send a new link back
 
-## Live demo
+## Screenshots
 
-You can try out the [Diagram Studio live version](https://diagram-studio.fly.dev/).
+### Project dashboard
+
+<p align="center">
+  <img src="static/screenshots/dashboard.png" alt="Diagram Studio project dashboard" />
+</p>
+
+### Diagram editor
+
+<p align="center">
+  <img src="static/screenshots/editor.png" alt="Diagram Studio diagram editor" />
+</p>
 
 ## Open-source self-hosting
 
