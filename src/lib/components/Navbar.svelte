@@ -86,9 +86,9 @@
     <MermaidIcon class="size-6" />
     <a href={resolve('/', {})} class="whitespace-nowrap text-accent">
       {#if !mobileToggle}
-        Mermaid
+        Free
       {/if}
-      Live Editor
+      Diagram Editor
     </a>
   </div>
   <div

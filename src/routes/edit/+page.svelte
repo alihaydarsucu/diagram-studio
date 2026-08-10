@@ -6,9 +6,6 @@
   import EnhancedEditsButton from '$/components/EnhancedEditsButton.svelte';
   import History from '$/components/History/History.svelte';
   import { startAutoSave } from '$/components/History/historyState.svelte';
-  import McWrapper from '$/components/McWrapper.svelte';
-  import MermaidChartIcon from '$/components/MermaidChartIcon.svelte';
-  import EditorChooserModal from '$/components/migration/EditorChooserModal.svelte';
   import Navbar from '$/components/Navbar.svelte';
   import PanZoomToolbar from '$/components/PanZoomToolbar.svelte';
   import Preset from '$/components/Preset.svelte';
@@ -21,13 +18,13 @@
   import VersionSecurityToolbar from '$/components/VersionSecurityToolbar.svelte';
   import View from '$/components/View.svelte';
   import type { EditorMode, Tab } from '$/types';
-  import { shouldShowEditorChooser } from '$/util/migration/domainMigration';
   import { PanZoomState } from '$/util/panZoom';
-  import { validatedState, updateCodeStore, urls } from '$/util/state.svelte';
-  import { logEvent, logMermaidChartClick } from '$/util/stats';
+  import { validatedState, updateCodeStore } from '$/util/state.svelte';
+  import { logEvent } from '$/util/stats';
   import { initHandler } from '$/util/util';
   import { onMount } from 'svelte';
   import CodeIcon from '~icons/custom/code';
+  import DownloadIcon from '~icons/material-symbols/download';
   import HistoryIcon from '~icons/material-symbols/history';
   import GearIcon from '~icons/material-symbols/settings-outline-rounded';
 
@@ -54,10 +51,7 @@
   let width = $state(0);
   let isMobile = $derived(width < 640);
   let isViewMode = $state(true);
-  let showEditorChooser = $state(false);
-
   onMount(async () => {
-    showEditorChooser = shouldShowEditorChooser();
     await initHandler();
     window.addEventListener('appinstalled', () => {
       logEvent('pwaInstalled', { isMobile });
@@ -66,6 +60,13 @@
 
   // Record the Timeline for the whole session, not just while the panel is open.
   onMount(() => startAutoSave());
+
+  const downloadVisual = (format: 'PNG' | 'SVG') => {
+    const button = document.querySelector(`[data-testid="download-${format}"]`);
+    if (button instanceof HTMLButtonElement) {
+      button.click();
+    }
+  };
 
   let isHistoryOpen = $state(false);
 
@@ -95,17 +96,24 @@
       <HistoryIcon />
     </Toggle>
     <Share />
-    <McWrapper>
+    <div class="flex items-center gap-1">
       <Button
         variant="accent"
         size="sm"
-        href={urls.current.mermaidChart({ medium: 'save_diagram' }).save}
-        target="_blank"
-        onclick={() => logMermaidChartClick('saveDiagram')}>
-        <MermaidChartIcon />
-        Save diagram
+        title="Download diagram as PNG"
+        onclick={() => downloadVisual('PNG')}>
+        <DownloadIcon />
+        Save PNG
       </Button>
-    </McWrapper>
+      <Button
+        variant="outline"
+        size="sm"
+        title="Download diagram as SVG"
+        onclick={() => downloadVisual('SVG')}>
+        <DownloadIcon />
+        SVG
+      </Button>
+    </div>
   </Navbar>
 
   <div class="flex flex-1 flex-col overflow-hidden" bind:clientWidth={width}>
@@ -156,5 +164,3 @@
     </div>
   </div>
 </div>
-
-<EditorChooserModal bind:open={showEditorChooser} />
