@@ -1,7 +1,7 @@
 <script lang="ts">
   import Card from '$lib/components/Card/Card.svelte';
   import type { HistoryEntry, HistoryType, State, Tab } from '$lib/types';
-  import { notify, prompt } from '$lib/util/notify';
+  import { notify } from '$lib/util/notify';
   import { serializeState } from '$lib/util/serde';
   import { inputState, replaceInputState } from '$lib/util/state.svelte';
   import { logEvent } from '$lib/util/stats';
@@ -18,6 +18,7 @@
   import GitAltIcon from '~icons/mdi/git';
   import OpenInNewIcon from '~icons/material-symbols/open-in-new-rounded';
   import { Button } from '../ui/button';
+  import * as Dialog from '../ui/dialog';
   import { Separator } from '../ui/separator';
   import {
     addManualEntry,
@@ -53,6 +54,8 @@
   // Inline rename state for a single entry.
   let editingId: string | null = $state(null);
   let editValue = $state('');
+  let confirmation: 'clear' | 'remove' | null = $state(null);
+  let pendingRemoveId: string | null = $state(null);
 
   const commitRename = () => {
     if (editingId !== null && editValue.trim()) {
@@ -106,9 +109,7 @@
   };
 
   const clearAll = () => {
-    if (prompt('Clear all saved items?')) {
-      clearActive();
-    }
+    confirmation = 'clear';
   };
 
   const restoreHistoryItem = (state: State): void => {
@@ -116,9 +117,18 @@
   };
 
   const confirmRemoveEntry = (id: string): void => {
-    if (prompt('Delete this project? This action cannot be undone.')) {
-      removeEntry(id);
+    pendingRemoveId = id;
+    confirmation = 'remove';
+  };
+
+  const confirmAction = (): void => {
+    if (confirmation === 'clear') {
+      clearActive();
+    } else if (confirmation === 'remove' && pendingRemoveId) {
+      removeEntry(pendingRemoveId);
     }
+    confirmation = null;
+    pendingRemoveId = null;
   };
 
   // Absolute editor URL for an entry, so the link can be opened in a new tab or copied.
@@ -254,3 +264,23 @@
     {/if}
   </ul>
 </Card>
+
+<Dialog.Root
+  open={confirmation !== null}
+  onOpenChange={(open) => {
+    if (!open) {
+      confirmation = null;
+      pendingRemoveId = null;
+    }
+  }}>
+  <Dialog.Content>
+    <Dialog.Header>
+      <Dialog.Title>{confirmation === 'clear' ? 'Clear saved items?' : 'Delete project?'}</Dialog.Title>
+      <Dialog.Description>This action cannot be undone.</Dialog.Description>
+    </Dialog.Header>
+    <Dialog.Footer>
+      <Dialog.Close class="rounded-md border px-4 py-2 text-sm">Cancel</Dialog.Close>
+      <Button variant="destructive" onclick={confirmAction}>Confirm</Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>

@@ -5,6 +5,8 @@
   import { serializeState } from '$lib/util/serde';
   import { urls } from '$lib/util/state.svelte';
   import { Button } from '$lib/components/ui/button';
+  import * as Dialog from '$lib/components/ui/dialog';
+  import { Input } from '$lib/components/ui/input';
   import { initHistory } from '$lib/components/History/historyState.svelte';
   import dayjs from 'dayjs';
   import dayjsRelativeTime from 'dayjs/plugin/relativeTime';
@@ -12,6 +14,11 @@
   dayjs.extend(dayjsRelativeTime);
 
   import { onMount } from 'svelte';
+
+  let newProjectOpen = $state(false);
+  let newProjectName = $state('Untitled Project');
+  let deleteProjectId = $state<string | null>(null);
+  let deleteProjectOpen = $state(false);
 
   onMount(() => {
     void initHistory();
@@ -26,18 +33,25 @@
     return `${url.pathname}${url.search}${url.hash}`;
   };
   const newProject = () => {
-    const name = window.prompt('Project name', 'Untitled Project');
-    if (name === null) {
-      return;
-    }
+    newProjectName = 'Untitled Project';
+    newProjectOpen = true;
+  };
+  const createProject = () => {
     const url = new URL(urls.current.new, window.location.origin);
-    url.searchParams.set('projectName', name.trim() || 'Untitled Project');
+    url.searchParams.set('projectName', newProjectName.trim() || 'Untitled Project');
+    newProjectOpen = false;
     void goto(`${url.pathname}${url.search}${url.hash}`);
   };
   const confirmDelete = (id: string) => {
-    if (window.confirm('Delete this project? This action cannot be undone.')) {
-      removeEntry(id);
+    deleteProjectId = id;
+    deleteProjectOpen = true;
+  };
+  const deleteProject = () => {
+    if (deleteProjectId) {
+      removeEntry(deleteProjectId);
     }
+    deleteProjectId = null;
+    deleteProjectOpen = false;
   };
 </script>
 
@@ -93,3 +107,37 @@
     </div>
   </main>
 </div>
+
+<Dialog.Root bind:open={newProjectOpen}>
+  <Dialog.Content>
+    <Dialog.Header>
+      <Dialog.Title>Create new project</Dialog.Title>
+      <Dialog.Description>Choose a name for your new diagram project.</Dialog.Description>
+    </Dialog.Header>
+    <form
+      class="flex flex-col gap-4"
+      onsubmit={(event) => {
+        event.preventDefault();
+        createProject();
+      }}>
+      <Input bind:value={newProjectName} aria-label="Project name" autofocus />
+      <Dialog.Footer>
+        <Dialog.Close class="rounded-md border px-4 py-2 text-sm">Cancel</Dialog.Close>
+        <Button variant="accent" type="submit">Create project</Button>
+      </Dialog.Footer>
+    </form>
+  </Dialog.Content>
+</Dialog.Root>
+
+<Dialog.Root bind:open={deleteProjectOpen}>
+  <Dialog.Content>
+    <Dialog.Header>
+      <Dialog.Title>Delete project?</Dialog.Title>
+      <Dialog.Description>This action cannot be undone.</Dialog.Description>
+    </Dialog.Header>
+    <Dialog.Footer>
+      <Dialog.Close class="rounded-md border px-4 py-2 text-sm">Cancel</Dialog.Close>
+      <Button variant="destructive" onclick={deleteProject}>Delete project</Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
