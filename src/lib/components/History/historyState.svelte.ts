@@ -305,6 +305,18 @@ export const toggleFavorite = (id: string): void => {
   }
 };
 
+export const updateTags = (id: string, tags: string[]): void => {
+  const normalized = [...new Set(tags.map((tag) => tag.trim()).filter(Boolean))].slice(0, 12);
+  for (const slot of [auto, manual]) {
+    if (!slot.value.some((entry) => entry.id === id)) {
+      continue;
+    }
+    slot.value = slot.value.map((entry) => (entry.id === id ? { ...entry, tags: normalized } : entry));
+    syncRemote();
+    return;
+  }
+};
+
 export const clearActive = (): void => {
   const slot = slotFor(mode.value);
   if (!slot) {

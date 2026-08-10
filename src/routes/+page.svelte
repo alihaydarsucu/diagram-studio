@@ -5,7 +5,8 @@
     duplicateEntry,
     historyState,
     removeEntry,
-    toggleFavorite
+    toggleFavorite,
+    updateTags
   } from '$lib/components/History/historyState.svelte';
   import { serializeState } from '$lib/util/serde';
   import { urls } from '$lib/util/state.svelte';
@@ -19,6 +20,8 @@
   import StarIcon from '~icons/material-symbols/star-rounded';
   import StarOutlineIcon from '~icons/material-symbols/star-outline-rounded';
   import MoreVertIcon from '~icons/material-symbols/more-vert';
+  import AddIcon from '~icons/material-symbols/add-rounded';
+  import CloseIcon from '~icons/material-symbols/close-rounded';
 
   dayjs.extend(dayjsRelativeTime);
 
@@ -30,13 +33,24 @@
   let deleteProjectOpen = $state(false);
   let projectSearch = $state('');
   let showFavorites = $state(false);
+  let activeTag = $state<string | null>(null);
+  let tagDialogOpen = $state(false);
+  let tagProjectId = $state('');
+  let tagInput = $state('');
 
   const visibleProjects = $derived(
     historyState.allEntries.filter((entry) => {
       const matchesSearch = entry.name?.toLowerCase().includes(projectSearch.trim().toLowerCase());
-      return matchesSearch && (!showFavorites || entry.favorite);
+      const matchesTag = !activeTag || entry.tags?.includes(activeTag);
+      return matchesSearch && matchesTag && (!showFavorites || entry.favorite);
     })
   );
+  const allTags = $derived(
+    [...new Set(historyState.allEntries.flatMap((entry) => entry.tags ?? []))].sort((a, b) =>
+      a.localeCompare(b)
+    )
+  );
+  const tagProject = $derived(historyState.allEntries.find((entry) => entry.id === tagProjectId));
 
   onMount(() => {
     void initHistory();
@@ -71,6 +85,23 @@
     deleteProjectId = null;
     deleteProjectOpen = false;
   };
+  const openTagDialog = () => {
+    tagProjectId = historyState.allEntries[0]?.id ?? '';
+    tagInput = '';
+    tagDialogOpen = true;
+  };
+  const addTag = () => {
+    if (!tagProjectId || !tagInput.trim()) {
+      return;
+    }
+    updateTags(tagProjectId, [...(tagProject?.tags ?? []), tagInput]);
+    tagInput = '';
+  };
+  const removeTag = (tag: string) => {
+    if (tagProject) {
+      updateTags(tagProject.id, (tagProject.tags ?? []).filter((item) => item !== tag));
+    }
+  };
 </script>
 
 <div class="h-full overflow-y-auto bg-background">
@@ -88,10 +119,17 @@
   <main class="container mx-auto max-w-5xl p-6 sm:p-10">
     <div class="mb-8 flex flex-col gap-2">
       <h1 class="text-3xl font-bold tracking-tight text-foreground">Your Projects</h1>
-      <p class="text-muted-foreground">Manage and organize your diagrams</p>
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <p class="text-muted-foreground">Manage and organize your diagrams</p>
+        <a
+          class="text-sm text-accent hover:underline"
+          href="https://mermaid.js.org/intro/"
+          target="_blank"
+          rel="noopener noreferrer">Mermaid Guide ↗</a>
+      </div>
     </div>
 
-    <div class="mb-6 flex w-full max-w-xl items-center gap-2">
+    <div class="mb-6 flex w-full max-w-4xl flex-wrap items-center gap-2">
       <input
         class="h-10 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/30"
         bind:value={projectSearch}
@@ -105,6 +143,18 @@
         onclick={() => (showFavorites = !showFavorites)}>
         {#if showFavorites}<StarIcon />{:else}<StarOutlineIcon />{/if}
       </Button>
+      {#each allTags as tag (tag)}
+        <button
+          type="button"
+          class={`rounded-full border px-3 py-1.5 text-sm transition ${activeTag === tag ? 'border-accent bg-accent text-accent-foreground' : 'border-border bg-card text-muted-foreground hover:border-accent'}`}
+          onclick={() => (activeTag = activeTag === tag ? null : tag)}>{tag}</button>
+      {/each}
+      <Button
+        variant="outline"
+        size="icon"
+        aria-label="Add project tag"
+        title="Add project tag"
+        onclick={openTagDialog}><AddIcon /></Button>
     </div>
 
     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -127,6 +177,13 @@
               </button>
             </div>
             <span class="text-xs text-muted-foreground">{dayjs(entry.time).fromNow()}</span>
+            {#if entry.tags && entry.tags.length > 0}
+              <div class="mt-2 flex flex-wrap gap-1">
+                {#each entry.tags as tag (tag)}
+                  <span class="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">{tag}</span>
+                {/each}
+              </div>
+            {/if}
           </div>
           <div class="mt-4 flex items-center justify-between border-t pt-4">
             <Button href={entryUrl(entry.state, entry.name)} variant="outline" size="sm"
@@ -140,6 +197,13 @@
                 <Popover.Close
                   class="rounded px-3 py-2 text-left text-sm hover:bg-muted"
                   onclick={() => duplicateEntry(entry.id)}>Duplicate</Popover.Close>
+                <Popover.Close
+                  class="rounded px-3 py-2 text-left text-sm hover:bg-muted"
+                  onclick={() => {
+                    tagProjectId = entry.id;
+                    tagInput = '';
+                    tagDialogOpen = true;
+                  }}>Manage tags</Popover.Close>
                 <Popover.Close
                   class="rounded px-3 py-2 text-left text-sm text-destructive hover:bg-destructive/10"
                   onclick={() => confirmDelete(entry.id)}>Delete</Popover.Close>
@@ -179,6 +243,39 @@
         <Button variant="accent" type="submit">Create project</Button>
       </Dialog.Footer>
     </form>
+  </Dialog.Content>
+</Dialog.Root>
+
+<Dialog.Root bind:open={tagDialogOpen}>
+  <Dialog.Content>
+    <Dialog.Header>
+      <Dialog.Title>Manage project tags</Dialog.Title>
+      <Dialog.Description>Use short tags to filter your project dashboard.</Dialog.Description>
+    </Dialog.Header>
+    <div class="flex flex-col gap-4">
+      <select
+        class="h-10 rounded-md border border-input bg-background px-3 text-sm"
+        bind:value={tagProjectId}
+        aria-label="Project to tag">
+        {#each historyState.allEntries as project (project.id)}
+          <option value={project.id}>{project.name || 'Untitled Project'}</option>
+        {/each}
+      </select>
+      <div class="flex gap-2">
+        <Input bind:value={tagInput} placeholder="e.g. Firmware" aria-label="New tag" />
+        <Button variant="accent" onclick={addTag}>Add</Button>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        {#each tagProject?.tags ?? [] as tag (tag)}
+          <button
+            type="button"
+            class="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-sm"
+            onclick={() => removeTag(tag)}>{tag}<CloseIcon class="size-3.5" /></button>
+        {:else}
+          <span class="text-sm text-muted-foreground">No tags added yet.</span>
+        {/each}
+      </div>
+    </div>
   </Dialog.Content>
 </Dialog.Root>
 
