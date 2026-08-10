@@ -37,6 +37,79 @@ let historyInitPromise: Promise<void> | undefined;
 
 const isTest = import.meta.env.MODE === 'test';
 
+const exampleProjects: HistoryEntry[] = [
+  {
+    id: 'example-firmware-boot-flow',
+    name: 'Firmware Boot Flow',
+    state: { code: 'flowchart TD\n  Reset["Power On Reset"] --> Boot["Bootloader"]\n  Boot --> Check{"Application valid?"}\n  Check -->|Yes| App["Start Application"]\n  Check -->|No| Recovery["Recovery Mode"]', grid: true, mermaid: '{"theme":"default"}', panZoom: true, rough: false, updateDiagram: true },
+    time: Date.now() - 10 * 60_000,
+    type: 'manual'
+  },
+  {
+    id: 'example-rtos-task-scheduler',
+    name: 'RTOS Task Scheduler',
+    state: { code: 'flowchart LR\n  Timer["System Tick"] --> Scheduler["RTOS Scheduler"]\n  Scheduler --> Sensor["Sensor Task"]\n  Scheduler --> Control["Control Task"]\n  Scheduler --> Comms["Comms Task"]\n  Sensor --> Queue["Message Queue"] --> Control', grid: true, mermaid: '{"theme":"default"}', panZoom: true, rough: false, updateDiagram: true },
+    time: Date.now() - 20 * 60_000,
+    type: 'manual'
+  },
+  {
+    id: 'example-can-bus-network',
+    name: 'CAN Bus Network',
+    state: { code: 'flowchart TB\n  ECU1["Powertrain ECU"] --- Bus["CAN Bus"]\n  ECU2["Body Control ECU"] --- Bus\n  ECU3["Instrument Cluster"] --- Bus\n  Bus --> Gateway["CAN Gateway"] --> Cloud["Telemetry"]', grid: true, mermaid: '{"theme":"default"}', panZoom: true, rough: false, updateDiagram: true },
+    time: Date.now() - 30 * 60_000,
+    type: 'manual'
+  },
+  {
+    id: 'example-uart-driver-sequence',
+    name: 'UART Driver Sequence',
+    state: { code: 'sequenceDiagram\n  participant App as Application\n  participant Driver as UART Driver\n  participant DMA\n  participant Device\n  App->>Driver: uart_write(buffer)\n  Driver->>DMA: Configure TX transfer\n  DMA->>Device: Send bytes\n  Device-->>DMA: Transfer complete\n  DMA-->>Driver: IRQ\n  Driver-->>App: Callback', grid: true, mermaid: '{"theme":"default"}', panZoom: true, rough: false, updateDiagram: true },
+    time: Date.now() - 40 * 60_000,
+    type: 'manual'
+  },
+  {
+    id: 'example-spi-peripheral-topology',
+    name: 'SPI Peripheral Topology',
+    state: { code: 'flowchart LR\n  MCU["MCU"] --> SCK["SCK"]\n  MCU --> MOSI["MOSI"]\n  MCU --> MISO["MISO"]\n  MCU --> CS1["CS1"] --> Flash["External Flash"]\n  MCU --> CS2["CS2"] --> Sensor["IMU Sensor"]', grid: true, mermaid: '{"theme":"default"}', panZoom: true, rough: false, updateDiagram: true },
+    time: Date.now() - 50 * 60_000,
+    type: 'manual'
+  },
+  {
+    id: 'example-i2c-device-discovery',
+    name: 'I2C Device Discovery',
+    state: { code: 'flowchart TD\n  Start["I2C Start"] --> Address["Scan Address 0x08..0x77"]\n  Address --> Ack{"ACK received?"}\n  Ack -->|Yes| Register["Read device ID"]\n  Ack -->|No| Next["Next address"]\n  Register --> Next\n  Next --> Address\n  Next --> Done["Return device table"]', grid: true, mermaid: '{"theme":"default"}', panZoom: true, rough: false, updateDiagram: true },
+    time: Date.now() - 60 * 60_000,
+    type: 'manual'
+  },
+  {
+    id: 'example-ota-update-pipeline',
+    name: 'OTA Update Pipeline',
+    state: { code: 'flowchart LR\n  Build["CI Build"] --> Sign["Sign Firmware"] --> Release["Release Server"]\n  Device["Device"] --> Check["Check Version"] --> Release\n  Release --> Download["Download Image"] --> Verify["Verify Signature"]\n  Verify --> Install["Install to Inactive Slot"] --> Reboot["Reboot"]', grid: true, mermaid: '{"theme":"default"}', panZoom: true, rough: false, updateDiagram: true },
+    time: Date.now() - 70 * 60_000,
+    type: 'manual'
+  },
+  {
+    id: 'example-motor-control-state-machine',
+    name: 'Motor Control State Machine',
+    state: { code: 'stateDiagram-v2\n  [*] --> Idle\n  Idle --> Starting: start command\n  Starting --> Running: speed stable\n  Starting --> Fault: overcurrent\n  Running --> Stopping: stop command\n  Running --> Fault: protection trip\n  Stopping --> Idle: motor stopped\n  Fault --> Idle: reset', grid: true, mermaid: '{"theme":"default"}', panZoom: true, rough: false, updateDiagram: true },
+    time: Date.now() - 80 * 60_000,
+    type: 'manual'
+  },
+  {
+    id: 'example-watchdog-recovery',
+    name: 'Watchdog Recovery',
+    state: { code: 'flowchart TD\n  Task["Critical Task"] --> Feed["Feed Watchdog"]\n  Feed --> Monitor["Watchdog Monitor"]\n  Task --> Error{"Task stalled?"}\n  Error -->|No| Feed\n  Error -->|Yes| Timeout["Watchdog Timeout"]\n  Timeout --> Reset["System Reset"] --> Log["Persist Reset Reason"]', grid: true, mermaid: '{"theme":"default"}', panZoom: true, rough: false, updateDiagram: true },
+    time: Date.now() - 90 * 60_000,
+    type: 'manual'
+  },
+  {
+    id: 'example-embedded-system-architecture',
+    name: 'Embedded System Architecture',
+    state: { code: 'flowchart TB\n  subgraph Hardware\n    CPU["MCU / CPU"]\n    Memory["Flash + RAM"]\n    IO["GPIO / ADC / PWM"]\n  end\n  subgraph Software\n    BSP["Board Support Package"]\n    HAL["Hardware Abstraction"]\n    Services["System Services"]\n    App["Application"]\n  end\n  Hardware --> BSP --> HAL --> Services --> App', grid: true, mermaid: '{"theme":"default"}', panZoom: true, rough: false, updateDiagram: true },
+    time: Date.now() - 100 * 60_000,
+    type: 'manual'
+  }
+];
+
 const remoteSnapshot = (): RemoteHistory => ({
   auto: auto.value,
   manual: manual.value
@@ -81,7 +154,12 @@ export const initHistory = (): Promise<void> => {
 
       auto.value = shouldMigrate ? localAuto : remoteAuto;
       manual.value = shouldMigrate ? localManual : remoteManual;
-      if (shouldMigrate) {
+      const existingIds = new Set(manual.value.map((entry) => entry.id));
+      const missingExamples = exampleProjects.filter((entry) => !existingIds.has(entry.id));
+      if (missingExamples.length > 0) {
+        manual.value = [...manual.value, ...missingExamples];
+      }
+      if (shouldMigrate || missingExamples.length > 0) {
         await fetch('/api/history', {
           body: JSON.stringify(remoteSnapshot()),
           headers: { 'Content-Type': 'application/json' },
