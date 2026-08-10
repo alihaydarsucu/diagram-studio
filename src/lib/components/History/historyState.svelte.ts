@@ -244,6 +244,21 @@ export const addManualEntry = (state: State, name?: string): boolean =>
 export const addAutoEntry = (state: State): boolean =>
   addEntry(auto, state, 'auto', MAX_AUTO_HISTORY_LENGTH);
 
+export const duplicateEntry = (id: string): boolean => {
+  const source = [...auto.value, ...manual.value].find((entry) => entry.id === id);
+  if (!source) {
+    return false;
+  }
+  const name = source.name?.trim() || 'Untitled Project';
+  manual.value = [
+    createEntry(source.state, 'manual', `Copy of ${name}`),
+    ...manual.value.slice(0, 499)
+  ];
+  syncRemote();
+  logEvent('history', { action: 'duplicate' });
+  return true;
+};
+
 export const setLoaderEntries = (entries: Optional<HistoryEntry, 'id'>[]): void => {
   loader = entries.map((entry) =>
     entry.id ? (entry as HistoryEntry) : { ...entry, id: uuidV4() }

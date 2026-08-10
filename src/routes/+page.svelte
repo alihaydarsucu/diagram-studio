@@ -2,6 +2,7 @@
   import { asset } from '$app/paths';
   import { goto } from '$app/navigation';
   import {
+    duplicateEntry,
     historyState,
     removeEntry,
     toggleFavorite
@@ -11,11 +12,13 @@
   import { Button } from '$lib/components/ui/button';
   import * as Dialog from '$lib/components/ui/dialog';
   import { Input } from '$lib/components/ui/input';
+  import * as Popover from '$lib/components/ui/popover';
   import { initHistory } from '$lib/components/History/historyState.svelte';
   import dayjs from 'dayjs';
   import dayjsRelativeTime from 'dayjs/plugin/relativeTime';
   import StarIcon from '~icons/material-symbols/star-rounded';
   import StarOutlineIcon from '~icons/material-symbols/star-outline-rounded';
+  import MoreVertIcon from '~icons/material-symbols/more-vert';
 
   dayjs.extend(dayjsRelativeTime);
 
@@ -128,11 +131,20 @@
           <div class="mt-4 flex items-center justify-between border-t pt-4">
             <Button href={entryUrl(entry.state, entry.name)} variant="outline" size="sm"
               >Open Editor</Button>
-            <Button
-              variant="ghost"
-              class="text-destructive hover:bg-destructive/10"
-              size="sm"
-              onclick={() => confirmDelete(entry.id)}>Delete</Button>
+            <Popover.Root>
+              <Popover.Trigger
+                class="inline-flex size-8 items-center justify-center rounded-md hover:bg-muted"
+                aria-label="Project actions"
+                title="Project actions"><MoreVertIcon class="size-5" /></Popover.Trigger>
+              <Popover.Content align="end" class="flex w-40 flex-col gap-1 p-1">
+                <Popover.Close
+                  class="rounded px-3 py-2 text-left text-sm hover:bg-muted"
+                  onclick={() => duplicateEntry(entry.id)}>Duplicate</Popover.Close>
+                <Popover.Close
+                  class="rounded px-3 py-2 text-left text-sm text-destructive hover:bg-destructive/10"
+                  onclick={() => confirmDelete(entry.id)}>Delete</Popover.Close>
+              </Popover.Content>
+            </Popover.Root>
           </div>
         </div>
       {:else}
