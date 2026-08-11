@@ -241,12 +241,11 @@
       onHeightChange={(height) => aiPromptManager.updateHeight(height)}
       onClose={closePopup}
       onTryFree={() => {
-        logMermaidChartClick('vibeDiagramming');
-        window.open(
-          urls.current.mermaidChart({ medium: 'vibe_diagramming' }).save,
-          '_blank',
-          'noopener'
-        );
+        const diagramCode = validatedState.current.code;
+        const question = input.trim();
+        const prompt = `I have this Mermaid diagram:\n\n\`\`\`mermaid\n${diagramCode}\n\`\`\`\n\n${question}`;
+        const encodedPrompt = encodeURIComponent(prompt);
+        window.open(`https://chat.deepseek.com/?prompt=${encodedPrompt}`, '_blank', 'noopener');
         closePopup();
       }} />
   </div>

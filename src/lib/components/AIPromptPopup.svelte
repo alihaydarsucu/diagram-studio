@@ -100,11 +100,11 @@
 
     <div class="flex items-center justify-between">
       <span class="font-recursive text-xs font-normal text-foreground dark:text-foreground"
-        >Sign Up at Mermaid.ai to try AI</span>
+        >Ask DeepSeek AI</span>
       <Button
         class="font-recursive h-6 w-16 gap-1.5 rounded-sm bg-accent p-1 text-xs font-medium text-white no-underline hover:bg-accent/90 hover:text-white hover:no-underline active:bg-accent/80 dark:bg-accent dark:text-white! dark:hover:bg-accent/90 dark:active:bg-accent/80"
         onclick={onTryFree}>
-        Try free
+        Ask
       </Button>
     </div>
   </div>
